@@ -12,12 +12,14 @@ pub enum Error {
     ///
     /// # Fields
     ///
-    /// * dir - The directory that was specified but doesn't exist.
-    SpecDirNotExists { dir: PathBuf },
+    /// * `dir`: The directory that was specified but doesn't exist.
+    DirNotFound { dir: PathBuf },
     /// When the game directory cannot be automatically found. Try launching the game first.
     GameDirNotFound,
-    /// When %LocalAppData% Windows variable isn't found. What's wrong with your Windows install?
+    /// When `%LocalAppData%` Windows variable isn't found. What's wrong with your Windows install?
     MissingLocalAppdata,
+    /// When `version.txt` format is for some reason wrong.
+    VersionError,
 
     /// std::io errors.
     #[from]
@@ -26,40 +28,118 @@ pub enum Error {
 
 use Error::*;
 
+/// Get the game's major.minor version e.g. `0.32`.
+///
+/// # Arguments
+///
+/// * `data_dir`: The game's data directory. Usually `%LocalAppData%/BeamNG.Drive`. Can be found
+/// using `beam_mm::beamng_dir(dir)`
+///
+/// # Errors
+///
+/// * `VersionError`:
+///   * If the `version.txt` file exists but there is an issue with parsing the version
+///   major.minor.
+///   * If there is no `version.txt` and there is trouble manually discovering the version based on
+///   the existing game version directories.
+/// * `DirNotFound`: if the specified `data_dir` doesn't exist.
+/// * `std::io::Error`: if there is trouble checking file existence or reading dir. Most likely due
+/// to permission issues.
+pub fn game_version(data_dir: PathBuf) -> Result<String> {
+    if !data_dir.try_exists()? {
+        return Err(DirNotFound { dir: data_dir });
+    }
+    let version_path = data_dir.join("version.txt");
+    if version_path.try_exists()? {
+        // If the version.txt file exists in the data_dir, we can just read it to find the game
+        // version.
+        let full_version = fs::read_to_string(version_path)?;
+        let mut split_version = full_version.trim().split(".");
+        let major_version = split_version.next().ok_or(VersionError)?;
+        let minor_version = split_version.next().ok_or(VersionError)?;
+        Ok(format!("{},{}", major_version, minor_version))
+    } else {
+        // If there is no version.txt, a fallback is to list all the version directories and find
+        // the latest one, assuming it is correct.
+        fs::read_dir(data_dir)?
+            .filter_map(|f| f.ok().map(|f| f.path())) // Unwrap all, tossing out any files/dirs that errored.
+            .filter(|f| f.is_dir()) // Toss out non-dirs.
+            .filter_map(
+                |d| {
+                    d.to_str() // Convert dir name to str.
+                        .map(|d| d.parse::<f32>()) // Parse dir name to float (for version number).
+                        .filter(|n| n.is_ok()) // Toss out dirs that failed to convert to float.
+                        .map(|n| n.unwrap())
+                }, // Safe to unwrap now that we know each value is Ok.
+            )
+            .reduce(f32::max) // Grab max version number
+            .map(|n| n.to_string()) // Map version back to string
+            .ok_or(VersionError) // If something went wrong and thus we can't find the version then error
+    }
+}
+
 /// Get the path to the BeamNG.drive data directory if it exists.
 ///
 /// # Arguments
 ///
-/// * mods_dir - Optionally specify a custom directory where BeamNG holds its data. It will be
-/// checked to make sure it exists; if it does not, Err(SpecDirNotExists) will be returned.
+/// * `custom_dir`: Optionally specify a custom directory where BeamNG holds its data. It will be
+/// checked to make sure it exists; if it does not, `Err(SpecDirNotExists)` will be returned.
 ///
 /// # Errors
 ///
-/// * SpecDirNotExists - When a custom directory is specified but it doesn't exist.
-/// * GameDirNotFound - When the game's data directory cannot be found automatically.
-pub fn beamng_dir(mods_dir: Option<PathBuf>) -> Result<PathBuf> {
-    if let Some(mods_dir_) = mods_dir {
-        if mods_dir_.exists() {
-            Ok(mods_dir_)
+/// * `DirNotFound`: When a custom directory is specified but it doesn't exist.
+/// * `GameDirNotFound`: When the game's data directory cannot be found automatically.
+pub fn beamng_dir(custom_dir: Option<PathBuf>) -> Result<PathBuf> {
+    if let Some(custom_dir) = custom_dir {
+        if custom_dir.try_exists()? {
+            Ok(custom_dir)
         } else {
-            Err(SpecDirNotExists { dir: mods_dir_ })
+            Err(DirNotFound { dir: custom_dir })
         }
     } else {
         vec![dirs::data_local_dir(), dirs::data_dir()] // Possible data dirs to look for game dir in
             .into_iter()
-            .filter_map(|d| d.map(|d| d.join("BeamNG.drive"))) // Filter None, unwrap, and concat "BeamNG.drive" to path
-            .filter(|d| d.try_exists().unwrap_or(false)) // Filter out non-existing paths
-            .next() // Grab the first directory - most likely the only directory
+            .filter_map(|d| d.map(|d| d.join("BeamNG.drive"))) // Filter None, unwrap, and concat "BeamNG.drive" to path.
+            .filter(|d| d.try_exists().unwrap_or(false)) // Filter out non-existing paths.
+            .next() // Grab the first directory - most likely the only directory.
             .ok_or(GameDirNotFound {})
     }
 }
 
-/// Get the path to the beammm directory and create it if it doesn't exist
+/// Get the BeamNG.drive mods folder based on the game's base data dir and the game's version.
+///
+/// # Arguments
+///
+/// `data_dir`: The base game data directory. Usually `%LocalAppData%/BeamNG.drive`
+/// `version`: The current game version. Can be retrieved via `beam_mm::game_version(data_dir)`.
 ///
 /// # Errors
 ///
-/// * MissingLocalAppdata if there is a problem retrieving the %LocalAppData% Windows variable
-/// * std::io::Error if there is a permissions issue when checking if the dir exists or if there is
+/// `DirNotFound`: When passed in data_dir doesn't exist or the mods dir under the current version
+/// dir doesn't exist. Try launching the game first?
+/// `std::io::Error`: If there is a permission error in checking the existence of any dirs.
+pub fn mods_dir(data_dir: PathBuf, version: String) -> Result<PathBuf> {
+    // Confirm data_dir even exists.
+    if !data_dir.try_exists()? {
+        Err(DirNotFound { dir: data_dir })
+    } else {
+        // Find the mods_dir. To do this, we need to find the game version, enter that version.
+        // folder, and return the mods dir inside that folder after verifying it exists.
+        let mods_dir_ = data_dir.join(version).join("mods");
+        if mods_dir_.try_exists()? {
+            Ok(mods_dir_)
+        } else {
+            Err(DirNotFound { dir: mods_dir_ })
+        }
+    }
+}
+
+/// Get the path to the beammm directory and create it if it doesn't exist.
+///
+/// # Errors
+///
+/// * `MissingLocalAppdata` if there is a problem retrieving the `%LocalAppData%` Windows variable
+/// * `std::io::Error` if there is a permissions issue when checking if the dir exists or if there is
 /// an issue creating the dir
 pub fn beammm_dir() -> Result<PathBuf> {
     let dir = dirs::data_local_dir()
