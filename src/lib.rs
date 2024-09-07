@@ -28,6 +28,19 @@ pub enum Error {
 
 use Error::*;
 
+/// Check if a directory exists and create it if it doesn't. Consumes and returns the directory,
+/// making it simple to use at the end of a function.
+///
+/// Errors only on filesystem errors.
+fn validate_dir(dir: PathBuf) -> Result<PathBuf> {
+    if dir.try_exists()? {
+        Ok(dir)
+    } else {
+        fs::create_dir_all(&dir)?;
+        Ok(dir)
+    }
+}
+
 /// Get the game's major.minor version e.g. `0.32`.
 ///
 /// # Arguments
@@ -45,9 +58,11 @@ use Error::*;
 /// * `DirNotFound`: if the specified `data_dir` doesn't exist.
 /// * `std::io::Error`: if there is trouble checking file existence or reading dir. Most likely due
 /// to permission issues.
-pub fn game_version(data_dir: PathBuf) -> Result<String> {
+pub fn game_version(data_dir: &PathBuf) -> Result<String> {
     if !data_dir.try_exists()? {
-        return Err(DirNotFound { dir: data_dir });
+        return Err(DirNotFound {
+            dir: data_dir.to_owned(),
+        });
     }
     let version_path = data_dir.join("version.txt");
     if version_path.try_exists()? {
@@ -89,12 +104,14 @@ pub fn game_version(data_dir: PathBuf) -> Result<String> {
 ///
 /// * `DirNotFound`: When a custom directory is specified but it doesn't exist.
 /// * `GameDirNotFound`: When the game's data directory cannot be found automatically.
-pub fn beamng_dir(custom_dir: Option<PathBuf>) -> Result<PathBuf> {
+pub fn beamng_dir(custom_dir: &Option<PathBuf>) -> Result<PathBuf> {
     if let Some(custom_dir) = custom_dir {
         if custom_dir.try_exists()? {
-            Ok(custom_dir)
+            Ok(custom_dir.to_owned())
         } else {
-            Err(DirNotFound { dir: custom_dir })
+            Err(DirNotFound {
+                dir: custom_dir.to_owned(),
+            })
         }
     } else {
         vec![dirs::data_local_dir(), dirs::data_dir()] // Possible data dirs to look for game dir in
@@ -118,10 +135,12 @@ pub fn beamng_dir(custom_dir: Option<PathBuf>) -> Result<PathBuf> {
 /// `DirNotFound`: When passed in data_dir doesn't exist or the mods dir under the current version
 /// dir doesn't exist. Try launching the game first?
 /// `std::io::Error`: If there is a permission error in checking the existence of any dirs.
-pub fn mods_dir(data_dir: PathBuf, version: String) -> Result<PathBuf> {
+pub fn mods_dir(data_dir: &PathBuf, version: &String) -> Result<PathBuf> {
     // Confirm data_dir even exists.
     if !data_dir.try_exists()? {
-        Err(DirNotFound { dir: data_dir })
+        Err(DirNotFound {
+            dir: data_dir.to_owned(),
+        })
     } else {
         // Find the mods_dir. To do this, we need to find the game version, enter that version.
         // folder, and return the mods dir inside that folder after verifying it exists.
@@ -146,9 +165,10 @@ pub fn beammm_dir() -> Result<PathBuf> {
         .ok_or(MissingLocalAppdata)?
         .join("BeamMM");
 
-    if !dir.try_exists()? {
-        fs::create_dir_all(&dir)?;
-    }
+    validate_dir(dir)
+}
 
-    Ok(dir)
+pub fn presets_dir(beammm_dir: &PathBuf) -> Result<PathBuf> {
+    let dir = beammm_dir.join("presets");
+    validate_dir(dir)
 }

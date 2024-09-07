@@ -19,11 +19,11 @@ struct Args {
     update: bool,
 
     /// Create a mod preset
-    #[arg(long, value_name = "PRESET")]
+    #[arg(long, value_name = "NAME")]
     create_preset: Option<String>,
 
     /// Permanently delete a preset
-    #[arg(long, value_name = "PRESET")]
+    #[arg(long, value_name = "NAME")]
     delete_preset: Option<String>,
 
     /// Add mods to a preset
@@ -65,13 +65,15 @@ struct Args {
 fn main() -> beam_mm::Result<()> {
     let args = Args::parse();
 
-    let beamng_dir = beam_mm::beamng_dir(args.custom_data_dir)?;
-    let beamng_version = beam_mm::game_version(beamng_dir)?;
-    let mods_dir = beam_mm::mods_dir(beamng_dir, beamng_version)?;
+    let beamng_dir = beam_mm::beamng_dir(&args.custom_data_dir)?;
+    let beamng_version = beam_mm::game_version(&beamng_dir)?;
+    let mods_dir = beam_mm::mods_dir(&beamng_dir, &beamng_version)?;
     let beammm_dir = beam_mm::beammm_dir()?;
 
+    let presets_dir = beam_mm::presets_dir(&beammm_dir);
+
     if let Some(preset) = args.create_preset {
-        beam_mm::create_preset(preset, args.mods.unwrap_or(vec![]));
+        beam_mm::create_preset(&presets_dir, preset, args.mods.unwrap_or(vec![]));
     }
     if let Some(preset) = args.delete_preset {
         let confirmation = beam_mm::confirm(
