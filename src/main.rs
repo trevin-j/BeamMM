@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -55,29 +56,38 @@ struct Args {
     /// Answer yes to all confirmation prompts
     #[arg(long, short = 'y')]
     confirm_all: bool,
+
+    /// Choose a custom BeamNG data directory
+    #[arg(long, value_name = "DIR")]
+    custom_data_dir: Option<PathBuf>,
 }
 
-fn main() {
+fn main() -> beam_mm::Result<()> {
     let args = Args::parse();
 
+    let beamng_dir = beam_mm::beamng_dir(args.custom_data_dir)?;
+    let beamng_version = beam_mm::game_version(beamng_dir)?;
+    let mods_dir = beam_mm::mods_dir(beamng_dir, beamng_version)?;
+    let beammm_dir = beam_mm::beammm_dir()?;
+
     if let Some(preset) = args.create_preset {
-        crate::create_preset(preset, args.mods.unwrap_or(vec![]));
+        beam_mm::create_preset(preset, args.mods.unwrap_or(vec![]));
     }
     if let Some(preset) = args.delete_preset {
-        let confirmation = crate::confirm(
+        let confirmation = beam_mm::confirm(
             format!("Are you sure you want to delete preset '{}'?", preset),
             false,
             args.confirm_all,
         );
         if confirmation {
-            crate::delete_preset(preset);
+            beam_mm::delete_preset(preset);
         }
     }
     if let Some(preset) = args.enable_preset {
-        crate::enable_preset(preset);
+        beam_mm::enable_preset(preset);
     }
     if let Some(preset) = args.disable_preset {
-        crate::disable_preset(preset);
+        beam_mm::disable_preset(preset);
     }
 
     // Handle operations that require args.mods to exist.
@@ -86,62 +96,64 @@ fn main() {
         let all_mods = Some(String::from("all")) == mods.get(0).map(|s| s.to_lowercase());
 
         if args.add {
-            crate::add_mods(mods)?;
+            beam_mm::add_mods(mods)?;
         }
         if args.remove {
             if all_mods {
-                let confirmation = crate::confirm(
+                let confirmation = beam_mm::confirm(
                     "Are you sure you would like to remove all mods?".into(),
                     false,
                     args.confirm_all,
                 );
                 if confirmation {
-                    crate::remove_all_mods()?;
+                    beam_mm::remove_all_mods()?;
                 }
             } else {
-                crate::remove_mods(mods)?;
+                beam_mm::remove_mods(mods)?;
             }
         }
         if args.update {
             if all_mods {
-                crate::update_all_mods()?;
+                beam_mm::update_all_mods()?;
             } else {
-                crate::update_mods(mods)?;
+                beam_mm::update_mods(mods)?;
             }
         }
         if args.enable {
             if all_mods {
-                let confirmation = crate::confirm(
+                let confirmation = beam_mm::confirm(
                     "Are you sure you would like to enable all mods?".into(),
                     true,
                     args.confirm_all,
                 );
                 if confirmation {
-                    crate::enable_all_mods()?;
+                    beam_mm::enable_all_mods()?;
                 }
             } else {
-                crate::enable_mods(mods);
+                beam_mm::enable_mods(mods);
             }
         }
         if args.disable {
             if all_mods {
-                let confirmation = crate::confirm(
+                let confirmation = beam_mm::confirm(
                     "Are you sure you would like to disable all mods?".into(),
                     false,
                     args.confirm_all,
                 );
                 if confirmation {
-                    crate::disable_all_mods()?;
+                    beam_mm::disable_all_mods()?;
                 }
             } else {
-                crate::disable_mods(mods);
+                beam_mm::disable_mods(mods);
             }
         }
         if let Some(preset) = args.preset_add {
-            crate::add_to_preset(preset, mods);
+            beam_mm::add_to_preset(preset, mods);
         }
         if let Some(preset) = args.preset_remove {
-            crate::remove_from_preset(preset, mods);
+            beam_mm::remove_from_preset(preset, mods);
         }
     }
+
+    Ok(())
 }
