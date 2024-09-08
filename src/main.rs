@@ -7,16 +7,16 @@ use std::path::PathBuf;
 struct Args {
     /// Add mods to be tracked by BeamMM - does not install; use --update all after adding to
     /// install
-    #[arg(short, long)]
-    add: bool,
+    // #[arg(short, long)]
+    // add: bool,
 
     /// Remove/uninstall mods - pass "all" to remove all mods
-    #[arg(short, long)]
-    remove: bool,
+    // #[arg(short, long)]
+    // remove: bool,
 
     /// Update the specified mods - pass "all" to update all mods
-    #[arg(short, long)]
-    update: bool,
+    // #[arg(short, long)]
+    // update: bool,
 
     /// Create a mod preset
     #[arg(long, value_name = "NAME")]
@@ -76,11 +76,11 @@ fn main() -> beam_mm::Result<()> {
         beam_mm::create_preset(&presets_dir, preset, args.mods.unwrap_or(vec![]));
     }
     if let Some(preset) = args.delete_preset {
-        let confirmation = beam_mm::confirm(
-            format!("Are you sure you want to delete preset '{}'?", preset),
+        let confirmation = beam_mm::confirm_io(
+            &format!("Are you sure you want to delete preset '{}'?", preset),
             false,
             args.confirm_all,
-        );
+        )?;
         if confirmation {
             beam_mm::delete_preset(preset);
         }
@@ -97,37 +97,37 @@ fn main() -> beam_mm::Result<()> {
         // Check of mods argument is "all"
         let all_mods = Some(String::from("all")) == mods.get(0).map(|s| s.to_lowercase());
 
-        if args.add {
-            beam_mm::add_mods(mods)?;
-        }
-        if args.remove {
-            if all_mods {
-                let confirmation = beam_mm::confirm(
-                    "Are you sure you would like to remove all mods?".into(),
-                    false,
-                    args.confirm_all,
-                );
-                if confirmation {
-                    beam_mm::remove_all_mods()?;
-                }
-            } else {
-                beam_mm::remove_mods(mods)?;
-            }
-        }
-        if args.update {
-            if all_mods {
-                beam_mm::update_all_mods()?;
-            } else {
-                beam_mm::update_mods(mods)?;
-            }
-        }
+        // if args.add {
+        //     beam_mm::add_mods(mods)?;
+        // }
+        // if args.remove {
+        //     if all_mods {
+        //         let confirmation = beam_mm::confirm_io(
+        //             "Are you sure you would like to remove all mods?".into(),
+        //             false,
+        //             args.confirm_all,
+        //         )?;
+        //         if confirmation {
+        //             beam_mm::remove_all_mods()?;
+        //         }
+        //     } else {
+        //         beam_mm::remove_mods(mods)?;
+        //     }
+        // }
+        // if args.update {
+        //     if all_mods {
+        //         beam_mm::update_all_mods()?;
+        //     } else {
+        //         beam_mm::update_mods(mods)?;
+        //     }
+        // }
         if args.enable {
             if all_mods {
-                let confirmation = beam_mm::confirm(
+                let confirmation = beam_mm::confirm_io(
                     "Are you sure you would like to enable all mods?".into(),
                     true,
                     args.confirm_all,
-                );
+                )?;
                 if confirmation {
                     beam_mm::enable_all_mods()?;
                 }
@@ -137,11 +137,11 @@ fn main() -> beam_mm::Result<()> {
         }
         if args.disable {
             if all_mods {
-                let confirmation = beam_mm::confirm(
+                let confirmation = beam_mm::confirm_io(
                     "Are you sure you would like to disable all mods?".into(),
                     false,
                     args.confirm_all,
-                );
+                )?;
                 if confirmation {
                     beam_mm::disable_all_mods()?;
                 }
