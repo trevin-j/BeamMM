@@ -1,6 +1,10 @@
 use derive_more::From;
 use dirs;
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    io::{self, BufRead, Write},
+    path::PathBuf,
+};
 
 /// Result type alias for this crate.
 pub type Result<T> = core::result::Result<T, Error>;
@@ -171,4 +175,62 @@ pub fn beammm_dir() -> Result<PathBuf> {
 pub fn presets_dir(beammm_dir: &PathBuf) -> Result<PathBuf> {
     let dir = beammm_dir.join("presets");
     validate_dir(dir)
+}
+
+/// Confirm a choice with the user.
+///
+/// For testability, this function requires a BufRead and Write to do reading and writing. For a
+/// simple convenience wrapper around this that uses stdio, use `confirm_io`.
+///
+/// # Arguments
+///
+/// `reader`: Thing to read from e.g. stdin.
+/// `writer`: Thing to write to e.g. stdout.
+/// `msg`: The confirmation message to display to the user.
+/// `default`: The default choice.
+/// `confirm_all`: Whether or not to confirm all.
+///
+/// # Errors
+///
+/// IO errors are possible from read and write operations.
+pub fn confirm<R: BufRead, W: Write>(
+    mut reader: R,
+    mut writer: W,
+    msg: &str,
+    default: bool,
+    confirm_all: bool,
+) -> Result<bool> {
+    if confirm_all {
+        Ok(true)
+    } else {
+        let y_n = String::from(if default { "(Y/n)" } else { "(y/N)" });
+
+        write!(&mut writer, "{} {}", msg.trim(), y_n)?;
+
+        let mut input = String::new();
+        reader.read_line(&mut input)?;
+
+        input = input.trim().to_lowercase();
+
+        if default {
+            Ok(input != "n")
+        } else {
+            Ok(input == "y")
+        }
+    }
+}
+
+/// Convenience function that wraps the `confirm` function with stdio. Confirm a choice with the user.
+///
+/// # Arguments
+///
+/// `msg`: The confirmation message to display to the user.
+/// `default`: The default choice.
+/// `confirm_all`: Whether or not to confirm all.
+///
+/// # Errors
+///
+/// IO errors are possible from read and write operations.
+pub fn confirm_io(msg: &str, default: bool, confirm_all: bool) -> Result<bool> {
+    confirm(io::stdin().lock(), io::stdout(), msg, default, confirm_all)
 }
