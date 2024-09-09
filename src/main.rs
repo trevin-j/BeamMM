@@ -34,6 +34,10 @@ struct Args {
     #[arg(long, value_name = "PRESET")]
     preset_remove: Option<String>,
 
+    /// List presets
+    #[arg(long, short)]
+    list_presets: bool,
+
     /// Select the mods for the chosen operation
     mods: Option<Vec<String>>,
 
@@ -70,8 +74,11 @@ fn main() -> beam_mm::Result<()> {
     let mods_dir = beam_mm::mods_dir(&beamng_dir, &beamng_version)?;
     let beammm_dir = beam_mm::beammm_dir()?;
 
-    let presets_dir = beam_mm::presets_dir(&beammm_dir);
+    let presets_dir = beam_mm::presets_dir(&beammm_dir)?;
 
+    if args.list_presets {
+        beam_mm::list_presets_io(&presets_dir);
+    }
     if let Some(preset) = args.create_preset {
         beam_mm::create_preset(&presets_dir, preset, args.mods.unwrap_or(vec![]));
     }
