@@ -181,7 +181,7 @@ pub fn presets_dir(beammm_dir: &PathBuf) -> Result<PathBuf> {
 /// List currently saved presets.
 ///
 /// For testability, this function requires a Write to write the list. For a simple convenienve
-/// wrapper around this that uses stdio, use `list_presets_io`.
+/// wrapper around this that uses stdio, use `list_presets_cli`.
 ///
 /// # Arguments
 ///
@@ -215,14 +215,14 @@ pub fn list_presets<W: Write>(mut output: W, presets_dir: &PathBuf) -> Result<()
 /// # Errors
 ///
 /// Possible IO errors.
-pub fn list_presets_io(presets_dir: &PathBuf) -> Result<()> {
+pub fn list_presets_cli(presets_dir: &PathBuf) -> Result<()> {
     list_presets(io::stdout(), presets_dir)
 }
 
 /// Confirm a choice with the user.
 ///
 /// For testability, this function requires a BufRead and Write to do reading and writing. For a
-/// simple convenience wrapper around this that uses stdio, use `confirm_io`.
+/// simple convenience wrapper around this that uses stdio, use `confirm_cli`.
 ///
 /// # Arguments
 ///
@@ -273,6 +273,6 @@ pub fn confirm<R: BufRead, W: Write>(
 /// # Errors
 ///
 /// IO errors are possible from read and write operations.
-pub fn confirm_io(msg: &str, default: bool, confirm_all: bool) -> Result<bool> {
+pub fn confirm_cli(msg: &str, default: bool, confirm_all: bool) -> Result<bool> {
     confirm(io::stdin().lock(), io::stdout(), msg, default, confirm_all)
 }
