@@ -187,11 +187,13 @@ pub fn presets_dir(beammm_dir: &PathBuf) -> Result<PathBuf> {
 /// # Errors
 ///
 /// Possible IO errors.
-pub fn get_presets(presets_dir: &PathBuf) -> Result<impl Iterator<Item = PathBuf>> {
+pub fn get_presets(presets_dir: &PathBuf) -> Result<impl Iterator<Item = String>> {
     Ok(fs::read_dir(presets_dir)?
         .filter_map(|f| f.ok().map(|f| f.path())) // Get rid of errors and map to path type
         .filter(|f| f.is_file() && f.extension().unwrap_or(OsStr::new("")) == "json") // Filter out dirs and non-json files
-        .map(|f| f.with_extension(""))) // Map to remove the json extension so we just have the preset name
+        // Map to remove the json extension so we just have the preset name and convert to String
+        // if the os string into_string fails, it gets converted to None which gets filtered out
+        .filter_map(|f| f.with_extension("").into_os_string().into_string().ok()))
 }
 
 /// Confirm a choice with the user.
