@@ -77,7 +77,7 @@ fn main() -> beam_mm::Result<()> {
     let presets_dir = beam_mm::presets_dir(&beammm_dir)?;
 
     if args.list_presets {
-        for preset in beam_mm::get_presets(&presets_dir)? {
+        for preset in beam_mm::Preset::list(&presets_dir)? {
             println!("{}", preset);
         }
     }
