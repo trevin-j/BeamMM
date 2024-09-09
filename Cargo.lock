@@ -58,6 +58,7 @@ dependencies = [
  "clap",
  "derive_more",
  "dirs",
+ "serde",
  "serde_json",
  "thiserror",
 ]

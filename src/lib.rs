@@ -1,8 +1,9 @@
 use dirs;
+use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
-    fs,
-    io::{self, BufRead, Write},
+    fs::{self, File},
+    io::{self, BufRead, BufWriter, Write},
     path::PathBuf,
 };
 
@@ -32,6 +33,10 @@ pub enum Error {
     /// std::io errors.
     #[error("There was an IO error. {0}")]
     IO(#[from] std::io::Error),
+
+    /// serder_json errors.
+    #[error("There was a JSON error. {0}")]
+    JSON(#[from] serde_json::Error),
 }
 
 use Error::*;
@@ -255,4 +260,30 @@ pub fn confirm<R: BufRead, W: Write>(
 /// IO errors are possible from read and write operations.
 pub fn confirm_cli(msg: &str, default: bool, confirm_all: bool) -> Result<bool> {
     confirm(io::stdin().lock(), io::stdout(), msg, default, confirm_all)
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Preset {
+    name: String,
+    mods: Vec<String>,
+    enabled: bool,
+}
+
+impl Preset {
+    pub fn new(name: String, mods: Vec<String>) -> Self {
+        Preset {
+            name,
+            mods,
+            enabled: false,
+        }
+    }
+
+    pub fn save(&self, presets_dir: &PathBuf) -> Result<()> {
+        let file = File::create(presets_dir)?;
+        let mut writer = BufWriter::new(file);
+        serde_json::to_writer_pretty(&mut writer, self)?;
+        writer.flush()?;
+
+        Ok(())
+    }
 }
