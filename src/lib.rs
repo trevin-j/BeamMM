@@ -178,45 +178,20 @@ pub fn presets_dir(beammm_dir: &PathBuf) -> Result<PathBuf> {
     validate_dir(dir)
 }
 
-/// List currently saved presets.
-///
-/// For testability, this function requires a Write to write the list. For a simple convenienve
-/// wrapper around this that uses stdio, use `list_presets_cli`.
+/// Get an iterator over currently saved presets.
 ///
 /// # Arguments
 ///
-/// `output`: Thing to write to e.g. stdout.
 /// `presets_dir`: Where preset config files are stored.
 ///
 /// # Errors
 ///
 /// Possible IO errors.
-pub fn list_presets<W: Write>(mut output: W, presets_dir: &PathBuf) -> Result<()> {
-    let presets = fs::read_dir(presets_dir)?
+pub fn get_presets(presets_dir: &PathBuf) -> Result<impl Iterator<Item = PathBuf>> {
+    Ok(fs::read_dir(presets_dir)?
         .filter_map(|f| f.ok().map(|f| f.path())) // Get rid of errors and map to path type
         .filter(|f| f.is_file() && f.extension().unwrap_or(OsStr::new("")) == "json") // Filter out dirs and non-json files
-        .map(|f| f.with_extension("")); // Map to remove the json extension so we just have the preset name
-
-    for preset in presets {
-        if let Some(preset_str) = preset.to_str() {
-            write!(&mut output, "{}\n", preset_str)?;
-        }
-    }
-
-    Ok(())
-}
-
-/// Convenience wrapper around `list_presets` to list currently saved presets to stdio.
-///
-/// # Arguments
-///
-/// `presets_dir`: Where preset config files are stored.
-///
-/// # Errors
-///
-/// Possible IO errors.
-pub fn list_presets_cli(presets_dir: &PathBuf) -> Result<()> {
-    list_presets(io::stdout(), presets_dir)
+        .map(|f| f.with_extension(""))) // Map to remove the json extension so we just have the preset name
 }
 
 /// Confirm a choice with the user.

@@ -77,7 +77,11 @@ fn main() -> beam_mm::Result<()> {
     let presets_dir = beam_mm::presets_dir(&beammm_dir)?;
 
     if args.list_presets {
-        beam_mm::list_presets_io(&presets_dir);
+        for preset in beam_mm::get_presets(&presets_dir)? {
+            if let Some(preset_str) = preset.to_str() {
+                println!("{}", preset_str);
+            }
+        }
     }
     if let Some(preset) = args.create_preset {
         beam_mm::create_preset(&presets_dir, preset, args.mods.unwrap_or(vec![]));
