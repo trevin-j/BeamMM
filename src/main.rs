@@ -85,7 +85,7 @@ fn main() -> beam_mm::Result<()> {
         beam_mm::create_preset(&presets_dir, preset, args.mods.unwrap_or(vec![]));
     }
     if let Some(preset) = args.delete_preset {
-        let confirmation = beam_mm::confirm_io(
+        let confirmation = beam_mm::confirm_cli(
             &format!("Are you sure you want to delete preset '{}'?", preset),
             false,
             args.confirm_all,
@@ -111,7 +111,7 @@ fn main() -> beam_mm::Result<()> {
         // }
         // if args.remove {
         //     if all_mods {
-        //         let confirmation = beam_mm::confirm_io(
+        //         let confirmation = beam_mm::confirm_cli(
         //             "Are you sure you would like to remove all mods?".into(),
         //             false,
         //             args.confirm_all,
@@ -132,7 +132,7 @@ fn main() -> beam_mm::Result<()> {
         // }
         if args.enable {
             if all_mods {
-                let confirmation = beam_mm::confirm_io(
+                let confirmation = beam_mm::confirm_cli(
                     "Are you sure you would like to enable all mods?".into(),
                     true,
                     args.confirm_all,
@@ -146,7 +146,7 @@ fn main() -> beam_mm::Result<()> {
         }
         if args.disable {
             if all_mods {
-                let confirmation = beam_mm::confirm_io(
+                let confirmation = beam_mm::confirm_cli(
                     "Are you sure you would like to disable all mods?".into(),
                     false,
                     args.confirm_all,
