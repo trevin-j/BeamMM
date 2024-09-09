@@ -8,3 +8,4 @@ clap = { version = "4.5.17", features = ["derive"] }
 derive_more = { version = "1.0.0", features = ["from"] }
 dirs = "5.0.1"
 serde_json = "1.0.128"
+thiserror = "1.0.63"

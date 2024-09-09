@@ -1,4 +1,3 @@
-use derive_more::From;
 use dirs;
 use std::{
     ffi::OsStr,
@@ -11,24 +10,28 @@ use std::{
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Error enum for this crate.
-#[derive(Debug, From)]
+#[derive(thiserror::Error, Debug)]
 pub enum Error {
     /// When the specified directory does not exist.
     ///
     /// # Fields
     ///
     /// * `dir`: The directory that was specified but doesn't exist.
+    #[error("Directory {dir} not found.")]
     DirNotFound { dir: PathBuf },
     /// When the game directory cannot be automatically found. Try launching the game first.
+    #[error("Game directory could not automatically be found. Try launching the game first.")]
     GameDirNotFound,
     /// When `%LocalAppData%` Windows variable isn't found. What's wrong with your Windows install?
+    #[error("%LocalAppData% variable could not be found.")]
     MissingLocalAppdata,
     /// When `version.txt` format is for some reason wrong.
+    #[error("Could not parse BeamNG.drive's version.txt for game version.")]
     VersionError,
 
     /// std::io errors.
-    #[from]
-    IOError(std::io::Error),
+    #[error("There was an IO error. {0}")]
+    IO(#[from] std::io::Error),
 }
 
 use Error::*;
