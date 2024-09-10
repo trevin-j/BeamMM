@@ -321,6 +321,14 @@ impl Preset {
         fs::remove_file(presets_dir.join(name))?;
         Ok(())
     }
+
+    pub fn add_mod(&mut self, mod_name: &str) {
+        self.mods.push(String::from(mod_name))
+    }
+
+    pub fn add_mods(&mut self, mods: &[String]) {
+        self.mods.extend(mods.iter().cloned())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

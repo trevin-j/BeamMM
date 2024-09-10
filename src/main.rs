@@ -125,11 +125,15 @@ fn main() -> beam_mm::Result<()> {
             }
         }
         if let Some(preset) = args.preset_add {
-            beam_mm::add_to_preset(preset, mods);
+            let preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+            preset.add_mods(&mods);
+            preset.save_to_path(&presets_dir);
         }
         if let Some(preset) = args.preset_remove {
             beam_mm::remove_from_preset(preset, mods);
         }
+
+        beamng_mod_cfg.save_to_path(&mods_dir);
     }
 
     Ok(())
