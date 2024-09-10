@@ -286,4 +286,9 @@ impl Preset {
 
         Ok(())
     }
+
+    pub fn delete(name: &String, presets_dir: &PathBuf) -> Result<()> {
+        fs::remove_file(presets_dir.join(name))?;
+        Ok(())
+    }
 }

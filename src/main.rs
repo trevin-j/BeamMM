@@ -92,7 +92,7 @@ fn main() -> beam_mm::Result<()> {
             args.confirm_all,
         )?;
         if confirmation {
-            beam_mm::delete_preset(preset);
+            beam_mm::Preset::delete(&preset, &presets_dir);
         }
     }
     if let Some(preset) = args.enable_preset {
