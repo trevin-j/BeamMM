@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
     fs::{self, File},
-    io::{self, BufRead, BufWriter, Write},
+    io::{self, BufRead, BufReader, BufWriter, Write},
     path::{Path, PathBuf},
 };
 
@@ -29,6 +29,9 @@ pub enum Error {
     /// When `version.txt` format is for some reason wrong.
     #[error("Could not parse BeamNG.drive's version.txt for game version.")]
     VersionError,
+    /// When the preset wasn't found.
+    #[error("Could not find preset {preset} in {dir}")]
+    MissingPreset { dir: PathBuf, preset: String },
 
     /// std::io errors.
     #[error("There was an IO error. {0}")]
@@ -285,6 +288,24 @@ impl Preset {
         writer.flush()?;
 
         Ok(())
+    }
+
+    pub fn load<R: BufRead>(reader: R) -> Result<Self> {
+        Ok(serde_json::from_reader(reader)?)
+    }
+
+    pub fn load_from_path(name: &str, presets_dir: &Path) -> Result<Self> {
+        let preset_path = presets_dir.join(name);
+        if preset_path.try_exists()? {
+            let file = File::open(preset_path)?;
+            let reader = BufReader::new(file);
+            Self::load(reader)
+        } else {
+            Err(MissingPreset {
+                dir: presets_dir.into(),
+                preset: name.into(),
+            })
+        }
     }
 
     pub fn delete(name: &str, presets_dir: &Path) -> Result<()> {
