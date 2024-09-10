@@ -367,26 +367,20 @@ impl ModCfg {
     }
 
     // Consumes self and returns self. This is to prevent the need for mutability.
-    pub fn enable_mod(mut self, mod_name: &str) -> core::result::Result<Self, (Self, Error)> {
+    pub fn enable_mod(&mut self, mod_name: &str) -> Result<()> {
         if let Some(mod_) = self.mods.get_mut(mod_name) {
             mod_.active = true;
-            Ok(self)
+            Ok(())
         } else {
-            Err((
-                self,
-                MissingMods {
-                    mods: vec![mod_name.into()],
-                },
-            ))
+            Err(MissingMods {
+                mods: vec![mod_name.into()],
+            })
         }
     }
 
     // This function needs to only change self if everything is successful. If even one mod fails
     // somewhere, self should be returned unchanged.
-    pub fn enable_mods(
-        mut self,
-        mod_names: &[String],
-    ) -> core::result::Result<Self, (Self, Error)> {
+    pub fn enable_mods(&mut self, mod_names: &[String]) -> Result<()> {
         // First validate mods. If all exist, then we will push
         let mut missing_mods = vec![];
         for mod_name in mod_names {
@@ -396,14 +390,14 @@ impl ModCfg {
         }
 
         if missing_mods.len() > 0 {
-            Err((self, MissingMods { mods: missing_mods }))
+            Err(MissingMods { mods: missing_mods })
         } else {
             for mod_name in mod_names {
-                self = self.enable_mod(mod_name).unwrap(); // We've checked that every mod exists.
-                                                           // enable_mod can only error if a mod
-                                                           // doesn't exist so this is safe.
+                self.enable_mod(mod_name).unwrap(); // We've checked that every mod exists.
+                                                    // enable_mod can only error if a mod
+                                                    // doesn't exist so this is safe.
             }
-            Ok(self)
+            Ok(())
         }
     }
 
@@ -411,7 +405,7 @@ impl ModCfg {
         self.mods.keys()
     }
 
-    pub fn enable_all_mods(self) -> core::result::Result<Self, (Self, Error)> {
+    pub fn enable_all_mods(&mut self) -> Result<()> {
         let mods: Vec<String> = self.get_mods().cloned().collect();
         self.enable_mods(&mods)
     }
