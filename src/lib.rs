@@ -4,7 +4,7 @@ use std::{
     ffi::OsStr,
     fs::{self, File},
     io::{self, BufRead, BufWriter, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 /// Result type alias for this crate.
@@ -71,7 +71,7 @@ fn validate_dir(dir: PathBuf) -> Result<PathBuf> {
 /// * `DirNotFound`: if the specified `data_dir` doesn't exist.
 /// * `std::io::Error`: if there is trouble checking file existence or reading dir. Most likely due
 /// to permission issues.
-pub fn game_version(data_dir: &PathBuf) -> Result<String> {
+pub fn game_version(data_dir: &Path) -> Result<String> {
     if !data_dir.try_exists()? {
         return Err(DirNotFound {
             dir: data_dir.to_owned(),
@@ -148,7 +148,7 @@ pub fn beamng_dir(custom_dir: &Option<PathBuf>) -> Result<PathBuf> {
 /// `DirNotFound`: When passed in data_dir doesn't exist or the mods dir under the current version
 /// dir doesn't exist. Try launching the game first?
 /// `std::io::Error`: If there is a permission error in checking the existence of any dirs.
-pub fn mods_dir(data_dir: &PathBuf, version: &String) -> Result<PathBuf> {
+pub fn mods_dir(data_dir: &Path, version: &str) -> Result<PathBuf> {
     // Confirm data_dir even exists.
     if !data_dir.try_exists()? {
         Err(DirNotFound {
@@ -181,7 +181,7 @@ pub fn beammm_dir() -> Result<PathBuf> {
     validate_dir(dir)
 }
 
-pub fn presets_dir(beammm_dir: &PathBuf) -> Result<PathBuf> {
+pub fn presets_dir(beammm_dir: &Path) -> Result<PathBuf> {
     let dir = beammm_dir.join("presets");
     validate_dir(dir)
 }
@@ -261,7 +261,7 @@ impl Preset {
     /// # Errors
     ///
     /// Possible IO errors.
-    pub fn list(presets_dir: &PathBuf) -> Result<impl Iterator<Item = String>> {
+    pub fn list(presets_dir: &Path) -> Result<impl Iterator<Item = String>> {
         Ok(fs::read_dir(presets_dir)?
             .filter_map(|f| f.ok().map(|f| f.path())) // Get rid of errors and map to path type
             .filter(|f| f.is_file() && f.extension().unwrap_or(OsStr::new("")) == "json") // Filter out dirs and non-json files
@@ -278,7 +278,7 @@ impl Preset {
         }
     }
 
-    pub fn save(&self, presets_dir: &PathBuf) -> Result<()> {
+    pub fn save(&self, presets_dir: &Path) -> Result<()> {
         let file = File::create(presets_dir)?;
         let mut writer = BufWriter::new(file);
         serde_json::to_writer_pretty(&mut writer, self)?;
@@ -287,7 +287,7 @@ impl Preset {
         Ok(())
     }
 
-    pub fn delete(name: &String, presets_dir: &PathBuf) -> Result<()> {
+    pub fn delete(name: &str, presets_dir: &Path) -> Result<()> {
         fs::remove_file(presets_dir.join(name))?;
         Ok(())
     }
