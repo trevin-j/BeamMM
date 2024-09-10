@@ -1,6 +1,8 @@
 use dirs;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::{
+    collections::HashMap,
     ffi::OsStr,
     fs::{self, File},
     io::{self, BufRead, BufReader, BufWriter, Write},
@@ -312,4 +314,40 @@ impl Preset {
         fs::remove_file(presets_dir.join(name))?;
         Ok(())
     }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ModCfg {
+    mods: HashMap<String, Mod>,
+
+    /// Data that is unimportant to us.
+    #[serde(flatten)]
+    other: HashMap<String, Value>,
+}
+
+impl ModCfg {
+    pub fn load<R: BufRead>(reader: R) -> Result<Self> {
+        Ok(serde_json::from_reader(reader)?)
+    }
+
+    pub fn load_from_path(mods_dir: &Path) -> Result<Self> {
+        if mods_dir.try_exists()? {
+            let file = File::open(mods_dir.join("db.json"))?;
+            let reader = BufReader::new(file);
+            Self::load(reader)
+        } else {
+            Err(DirNotFound {
+                dir: mods_dir.into(),
+            })
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Mod {
+    active: bool,
+
+    /// Other unimportant data.
+    #[serde(flatten)]
+    other: HashMap<String, Value>,
 }
