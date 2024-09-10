@@ -69,7 +69,7 @@ fn main() -> beam_mm::Result<()> {
         }
     }
     if let Some(preset) = args.create_preset {
-        let preset = beam_mm::Preset::new(preset, args.mods.unwrap_or(vec![]));
+        let preset = beam_mm::Preset::new(preset, args.mods.clone().unwrap_or(vec![]));
         preset.save_to_path(&presets_dir)?;
     }
     if let Some(preset) = args.delete_preset {
@@ -79,7 +79,7 @@ fn main() -> beam_mm::Result<()> {
             args.confirm_all,
         )?;
         if confirmation {
-            beam_mm::Preset::delete(&preset, &presets_dir);
+            beam_mm::Preset::delete(&preset, &presets_dir)?;
         }
     }
     if let Some(preset) = args.enable_preset {
@@ -94,7 +94,7 @@ fn main() -> beam_mm::Result<()> {
         // Check of mods argument is "all"
         let all_mods = Some(String::from("all")) == mods.get(0).map(|s| s.to_lowercase());
 
-        let beamng_mod_cfg = beam_mm::ModCfg::load_from_path(&mods_dir)?;
+        let mut beamng_mod_cfg = beam_mm::ModCfg::load_from_path(&mods_dir)?;
 
         if args.enable {
             if all_mods {
@@ -104,10 +104,10 @@ fn main() -> beam_mm::Result<()> {
                     args.confirm_all,
                 )?;
                 if confirmation {
-                    beamng_mod_cfg.enable_all_mods()?;
+                    beamng_mod_cfg.set_all_mods_active(true)?;
                 }
             } else {
-                beamng_mod_cfg.enable_mods(&mods)?;
+                beamng_mod_cfg.set_mods_active(&mods, true)?;
             }
         }
         if args.disable {
@@ -118,10 +118,10 @@ fn main() -> beam_mm::Result<()> {
                     args.confirm_all,
                 )?;
                 if confirmation {
-                    beam_mm::disable_all_mods()?;
+                    beamng_mod_cfg.set_all_mods_active(false)?;
                 }
             } else {
-                beam_mm::disable_mods(mods);
+                beamng_mod_cfg.set_mods_active(&mods, false)?;
             }
         }
         if let Some(preset) = args.preset_add {

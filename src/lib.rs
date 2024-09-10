@@ -366,10 +366,9 @@ impl ModCfg {
         self.save(writer)
     }
 
-    // Consumes self and returns self. This is to prevent the need for mutability.
-    pub fn enable_mod(&mut self, mod_name: &str) -> Result<()> {
+    pub fn set_mod_active(&mut self, mod_name: &str, active: bool) -> Result<()> {
         if let Some(mod_) = self.mods.get_mut(mod_name) {
-            mod_.active = true;
+            mod_.active = active;
             Ok(())
         } else {
             Err(MissingMods {
@@ -380,7 +379,7 @@ impl ModCfg {
 
     // This function needs to only change self if everything is successful. If even one mod fails
     // somewhere, self should be returned unchanged.
-    pub fn enable_mods(&mut self, mod_names: &[String]) -> Result<()> {
+    pub fn set_mods_active(&mut self, mod_names: &[String], active: bool) -> Result<()> {
         // First validate mods. If all exist, then we will push
         let mut missing_mods = vec![];
         for mod_name in mod_names {
@@ -393,9 +392,9 @@ impl ModCfg {
             Err(MissingMods { mods: missing_mods })
         } else {
             for mod_name in mod_names {
-                self.enable_mod(mod_name).unwrap(); // We've checked that every mod exists.
-                                                    // enable_mod can only error if a mod
-                                                    // doesn't exist so this is safe.
+                self.set_mod_active(mod_name, active).unwrap(); // We've checked that every mod exists.
+                                                                // enable_mod can only error if a mod
+                                                                // doesn't exist so this is safe.
             }
             Ok(())
         }
@@ -405,9 +404,9 @@ impl ModCfg {
         self.mods.keys()
     }
 
-    pub fn enable_all_mods(&mut self) -> Result<()> {
+    pub fn set_all_mods_active(&mut self, active: bool) -> Result<()> {
         let mods: Vec<String> = self.get_mods().cloned().collect();
-        self.enable_mods(&mods)
+        self.set_mods_active(&mods, active)
     }
 }
 
