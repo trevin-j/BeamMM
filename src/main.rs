@@ -104,10 +104,16 @@ fn main() -> beam_mm::Result<()> {
                     args.confirm_all,
                 )?;
                 if confirmation {
-                    beam_mm::enable_all_mods()?;
+                    beamng_mod_cfg = match beamng_mod_cfg.enable_all_mods() {
+                        Ok(cfg) => cfg,
+                        Err((cfg, e)) => return Err(e),
+                    };
                 }
             } else {
-                beamng_mod_cfg.enable_mods(&mods);
+                beamng_mod_cfg = match beamng_mod_cfg.enable_mods(&mods) {
+                    Ok(cfg) => cfg,
+                    Err((cfg, e)) => return Err(e),
+                };
             }
         }
         if args.disable {
