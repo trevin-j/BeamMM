@@ -83,7 +83,7 @@ fn main() -> beam_mm::Result<()> {
     }
     if let Some(preset) = args.create_preset {
         let preset = beam_mm::Preset::new(preset, args.mods.unwrap_or(vec![]));
-        preset.save(&presets_dir)?;
+        preset.save_to_path(&presets_dir)?;
     }
     if let Some(preset) = args.delete_preset {
         let confirmation = beam_mm::confirm_cli(

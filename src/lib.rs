@@ -283,13 +283,17 @@ impl Preset {
         }
     }
 
-    pub fn save(&self, presets_dir: &Path) -> Result<()> {
-        let file = File::create(presets_dir)?;
-        let mut writer = BufWriter::new(file);
+    pub fn save<W: Write>(&self, mut writer: W) -> Result<()> {
         serde_json::to_writer_pretty(&mut writer, self)?;
         writer.flush()?;
 
         Ok(())
+    }
+
+    pub fn save_to_path(&self, presets_dir: &Path) -> Result<()> {
+        let file = File::create(presets_dir.join(&self.name))?;
+        let writer = BufWriter::new(file);
+        self.save(writer)
     }
 
     pub fn load<R: BufRead>(reader: R) -> Result<Self> {
