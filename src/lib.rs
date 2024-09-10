@@ -34,9 +34,9 @@ pub enum Error {
     /// When the preset wasn't found.
     #[error("Could not find preset {preset} in {dir}")]
     MissingPreset { dir: PathBuf, preset: String },
-    /// When a mod is specified but not found.
-    #[error("Mod not found: {mod_name}")]
-    MissingMod { mod_name: String },
+    /// When mods are specified but not found.
+    #[error("Mods not found: {mods:?}")]
+    MissingMods { mods: Vec<String> },
 
     /// std::io errors.
     #[error("There was an IO error. {0}")]
@@ -374,10 +374,33 @@ impl ModCfg {
         } else {
             Err((
                 self,
-                MissingMod {
-                    mod_name: mod_name.into(),
+                MissingMods {
+                    mods: vec![mod_name.into()],
                 },
             ))
+        }
+    }
+
+    // This function needs to only change self if everything is successful. If even one mod fails
+    // somewhere, self should be returned unchanged.
+    pub fn enable_mods(mut self, mod_names: &[&str]) -> core::result::Result<Self, (Self, Error)> {
+        // First validate mods. If all exist, then we will push
+        let mut missing_mods = vec![];
+        for &mod_name in mod_names {
+            if !self.mods.contains_key(mod_name) {
+                missing_mods.push(String::from(mod_name));
+            }
+        }
+
+        if missing_mods.len() > 0 {
+            Err((self, MissingMods { mods: missing_mods }))
+        } else {
+            for &mod_name in mod_names {
+                self = self.enable_mod(mod_name).unwrap(); // We've checked that every mod exists.
+                                                           // enable_mod can only error if a mod
+                                                           // doesn't exist so this is safe.
+            }
+            Ok(self)
         }
     }
 }

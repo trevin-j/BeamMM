@@ -63,6 +63,8 @@ fn main() -> beam_mm::Result<()> {
 
     let presets_dir = beam_mm::presets_dir(&beammm_dir)?;
 
+    let beamng_mod_cfg = beam_mm::ModCfg::load_from_path(&mods_dir)?;
+
     if args.list_presets {
         for preset in beam_mm::Preset::list(&presets_dir)? {
             println!("{}", preset);
