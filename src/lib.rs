@@ -406,6 +406,15 @@ impl ModCfg {
             Ok(self)
         }
     }
+
+    pub fn get_mods(&self) -> impl Iterator<Item = &String> {
+        self.mods.keys()
+    }
+
+    pub fn enable_all_mods(self) -> core::result::Result<Self, (Self, Error)> {
+        let mods: Vec<String> = self.get_mods().cloned().collect();
+        self.enable_mods(&mods)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
