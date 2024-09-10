@@ -349,10 +349,24 @@ impl ModCfg {
             })
         }
     }
+
+    pub fn save<W: Write>(&self, mut writer: W) -> Result<()> {
+        serde_json::to_writer_pretty(&mut writer, self)?;
+        writer.flush()?;
+
+        Ok(())
+    }
+
+    pub fn save_to_path(&self, mods_dir: &Path) -> Result<()> {
+        let file = File::create(mods_dir.join(Self::filename()))?;
+        let writer = BufWriter::new(file);
+        self.save(writer)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Mod {
+    // There is not yet a reason to give external access to Mod so keep private for now
     active: bool,
 
     /// Other unimportant data.
