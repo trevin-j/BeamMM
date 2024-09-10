@@ -5,19 +5,6 @@ use std::path::PathBuf;
 #[command(version, about, long_about = None)]
 /// BeamMM CLI - A mod manager backend and command line application for the game BeamNG.Drive
 struct Args {
-    /// Add mods to be tracked by BeamMM - does not install; use --update all after adding to
-    /// install
-    // #[arg(short, long)]
-    // add: bool,
-
-    /// Remove/uninstall mods - pass "all" to remove all mods
-    // #[arg(short, long)]
-    // remove: bool,
-
-    /// Update the specified mods - pass "all" to update all mods
-    // #[arg(short, long)]
-    // update: bool,
-
     /// Create a mod preset
     #[arg(long, value_name = "NAME")]
     create_preset: Option<String>,
@@ -107,30 +94,6 @@ fn main() -> beam_mm::Result<()> {
         // Check of mods argument is "all"
         let all_mods = Some(String::from("all")) == mods.get(0).map(|s| s.to_lowercase());
 
-        // if args.add {
-        //     beam_mm::add_mods(mods)?;
-        // }
-        // if args.remove {
-        //     if all_mods {
-        //         let confirmation = beam_mm::confirm_cli(
-        //             "Are you sure you would like to remove all mods?".into(),
-        //             false,
-        //             args.confirm_all,
-        //         )?;
-        //         if confirmation {
-        //             beam_mm::remove_all_mods()?;
-        //         }
-        //     } else {
-        //         beam_mm::remove_mods(mods)?;
-        //     }
-        // }
-        // if args.update {
-        //     if all_mods {
-        //         beam_mm::update_all_mods()?;
-        //     } else {
-        //         beam_mm::update_mods(mods)?;
-        //     }
-        // }
         if args.enable {
             if all_mods {
                 let confirmation = beam_mm::confirm_cli(
