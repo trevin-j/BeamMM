@@ -330,13 +330,17 @@ pub struct ModCfg {
 }
 
 impl ModCfg {
+    fn filename() -> PathBuf {
+        PathBuf::from("db.json")
+    }
+
     pub fn load<R: BufRead>(reader: R) -> Result<Self> {
         Ok(serde_json::from_reader(reader)?)
     }
 
     pub fn load_from_path(mods_dir: &Path) -> Result<Self> {
         if mods_dir.try_exists()? {
-            let file = File::open(mods_dir.join("db.json"))?;
+            let file = File::open(mods_dir.join(Self::filename()))?;
             let reader = BufReader::new(file);
             Self::load(reader)
         } else {
