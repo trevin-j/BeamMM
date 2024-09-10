@@ -34,6 +34,9 @@ pub enum Error {
     /// When the preset wasn't found.
     #[error("Could not find preset {preset} in {dir}")]
     MissingPreset { dir: PathBuf, preset: String },
+    /// When a mod is specified but not found.
+    #[error("Mod not found: {mod_name}")]
+    MissingMod { mod_name: String },
 
     /// std::io errors.
     #[error("There was an IO error. {0}")]
@@ -361,6 +364,21 @@ impl ModCfg {
         let file = File::create(mods_dir.join(Self::filename()))?;
         let writer = BufWriter::new(file);
         self.save(writer)
+    }
+
+    // Consumes self and returns self. This is to prevent the need for mutability.
+    pub fn enable_mod(mut self, mod_name: &str) -> core::result::Result<Self, (Self, Error)> {
+        if let Some(mod_) = self.mods.get_mut(mod_name) {
+            mod_.active = true;
+            Ok(self)
+        } else {
+            Err((
+                self,
+                MissingMod {
+                    mod_name: mod_name.into(),
+                },
+            ))
+        }
     }
 }
 
