@@ -63,6 +63,8 @@ fn main() -> beam_mm::Result<()> {
 
     let presets_dir = beam_mm::presets_dir(&beammm_dir)?;
 
+    let mut beamng_mod_cfg = beam_mm::ModCfg::load_from_path(&mods_dir)?;
+
     if args.list_presets {
         for preset in beam_mm::Preset::list(&presets_dir)? {
             println!("{}", preset);
@@ -83,7 +85,9 @@ fn main() -> beam_mm::Result<()> {
         }
     }
     if let Some(preset) = args.enable_preset {
-        beam_mm::enable_preset(preset);
+        let preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+        preset.enable(&mut beamng_mod_cfg)?;
+        preset.save_to_path(&presets_dir)?;
     }
     if let Some(preset) = args.disable_preset {
         beam_mm::disable_preset(preset);
@@ -93,8 +97,6 @@ fn main() -> beam_mm::Result<()> {
     if let Some(mods) = args.mods {
         // Check of mods argument is "all"
         let all_mods = Some(String::from("all")) == mods.get(0).map(|s| s.to_lowercase());
-
-        let mut beamng_mod_cfg = beam_mm::ModCfg::load_from_path(&mods_dir)?;
 
         if args.enable {
             if all_mods {
@@ -134,9 +136,9 @@ fn main() -> beam_mm::Result<()> {
             preset.remove_mods(&mods);
             preset.save_to_path(&presets_dir);
         }
-
-        beamng_mod_cfg.save_to_path(&mods_dir);
     }
+
+    beamng_mod_cfg.save_to_path(&mods_dir);
 
     Ok(())
 }

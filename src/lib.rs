@@ -340,6 +340,12 @@ impl Preset {
 
         self.mods.retain(|m| !values_to_remove.contains(m))
     }
+
+    pub fn enable(&mut self, mod_config: &mut ModCfg) -> Result<()> {
+        mod_config.set_mods_active(&self.mods, true)?;
+        self.enabled = true;
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
