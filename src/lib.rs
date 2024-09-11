@@ -2,7 +2,7 @@ use dirs;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     ffi::OsStr,
     fs::{self, File},
     io::{self, BufRead, BufReader, BufWriter, Write},
@@ -328,6 +328,17 @@ impl Preset {
 
     pub fn add_mods(&mut self, mods: &[String]) {
         self.mods.extend(mods.iter().cloned())
+    }
+
+    pub fn remove_mod(&mut self, mod_name: &str) {
+        self.mods.retain(|m| m != mod_name)
+    }
+
+    pub fn remove_mods(&mut self, mods: &[String]) {
+        // Convert to HashSet so we can O(1) check if a mod is in the mods to remove.
+        let values_to_remove: HashSet<&String> = mods.iter().collect();
+
+        self.mods.retain(|m| !values_to_remove.contains(m))
     }
 }
 
