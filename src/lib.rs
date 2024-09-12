@@ -37,6 +37,12 @@ pub enum Error {
     /// When mods are specified but not found.
     #[error("Mods not found: {mods:?}")]
     MissingMods { mods: Vec<String> },
+    // When a preset errors when enabling
+    #[error("Presets failed to enable: {presets:?}, missing these mods: {mods:?}")]
+    PresetsFailed {
+        mods: HashSet<String>,
+        presets: HashSet<String>,
+    },
 
     /// std::io errors.
     #[error("There was an IO error. {0}")]
@@ -341,10 +347,18 @@ impl Preset {
         self.mods.retain(|m| !values_to_remove.contains(m))
     }
 
-    pub fn enable(&mut self, mod_config: &mut ModCfg) -> Result<()> {
-        mod_config.set_mods_active(&self.mods, true)?;
-        self.enabled = true;
-        Ok(())
+    // Enabling just allows the mod_cfg to check if it's enabled and enable its mods during
+    // ModCfg::apply_presets()
+    pub fn enable(&mut self) {
+        self.enabled = true
+    }
+
+    pub fn disable(&mut self, mod_config: &mut ModCfg) -> Result<()> {
+        mod_config.set_mods_active(&self.mods, false)
+    }
+
+    pub fn get_enabled(&self) -> bool {
+        self.enabled
     }
 }
 
@@ -375,6 +389,47 @@ impl ModCfg {
             Err(DirNotFound {
                 dir: mods_dir.into(),
             })
+        }
+    }
+
+    pub fn apply_presets(&mut self, presets_dir: &Path) -> Result<()> {
+        // Get list of mods that need to be enabled from enabled presets
+        // This could produce duplicates but going through to remove duplicates would be more
+        // expensive than a few redundant operations.
+        // let mods: Vec<String> = Preset::list(presets_dir)? // Get all preset names
+        //     .map(|n| Preset::load_from_path(&n, presets_dir)?) // Map them to Preset structs by
+        //     // loading the preset files
+        //     .filter(|p| p.get_enabled()) // Filter out disabled presets
+        //     .map(|p| p.mods) // Get the mods of the enabled presets
+        //     .flatten()
+        //     .collect();
+
+        let mut missing_mods = HashSet::new();
+        let mut failed_presets = HashSet::new();
+
+        for preset_name in Preset::list(presets_dir)? {
+            let preset = Preset::load_from_path(&preset_name, presets_dir)?;
+            if preset.get_enabled() {
+                match self.set_mods_active(&preset.mods, true) {
+                    Ok(()) => (),
+                    Err(e) => match e {
+                        MissingMods { mods } => {
+                            missing_mods.extend(mods);
+                            failed_presets.insert(preset_name);
+                        }
+                        other => return Err(other), // Should not happen
+                    },
+                }
+            }
+        }
+
+        if failed_presets.len() > 0 {
+            Err(PresetsFailed {
+                mods: missing_mods,
+                presets: failed_presets,
+            })
+        } else {
+            Ok(())
         }
     }
 

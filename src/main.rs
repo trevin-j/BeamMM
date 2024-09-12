@@ -85,12 +85,14 @@ fn main() -> beam_mm::Result<()> {
         }
     }
     if let Some(preset) = args.enable_preset {
-        let preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
-        preset.enable(&mut beamng_mod_cfg)?;
+        let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+        preset.enable();
         preset.save_to_path(&presets_dir)?;
     }
     if let Some(preset) = args.disable_preset {
-        beam_mm::disable_preset(preset);
+        let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+        preset.disable(&mut beamng_mod_cfg)?;
+        preset.save_to_path(&presets_dir)?;
     }
 
     // Handle operations that require args.mods to exist.
@@ -129,16 +131,17 @@ fn main() -> beam_mm::Result<()> {
         if let Some(preset) = args.preset_add {
             let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
             preset.add_mods(&mods);
-            preset.save_to_path(&presets_dir);
+            preset.save_to_path(&presets_dir)?;
         }
         if let Some(preset) = args.preset_remove {
             let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
             preset.remove_mods(&mods);
-            preset.save_to_path(&presets_dir);
+            preset.save_to_path(&presets_dir)?;
         }
     }
 
-    beamng_mod_cfg.save_to_path(&mods_dir);
+    beamng_mod_cfg.apply_presets(&presets_dir)?;
+    beamng_mod_cfg.save_to_path(&mods_dir)?;
 
     Ok(())
 }
