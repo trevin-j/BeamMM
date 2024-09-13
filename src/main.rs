@@ -1,3 +1,4 @@
+use beam_mm::path::*;
 use clap::Parser;
 use std::path::PathBuf;
 
@@ -56,14 +57,14 @@ struct Args {
 fn main() -> beam_mm::Result<()> {
     let args = Args::parse();
 
-    let beamng_dir = beam_mm::beamng_dir(&args.custom_data_dir)?;
+    let beamng_dir = beamng_dir(&args.custom_data_dir)?;
     let beamng_version = beam_mm::game_version(&beamng_dir)?;
-    let mods_dir = beam_mm::mods_dir(&beamng_dir, &beamng_version)?;
-    let beammm_dir = beam_mm::beammm_dir()?;
+    let mods_dir = mods_dir(&beamng_dir, &beamng_version)?;
+    let beammm_dir = beammm_dir()?;
 
-    let presets_dir = beam_mm::presets_dir(&beammm_dir)?;
+    let presets_dir = presets_dir(&beammm_dir)?;
 
-    let mut beamng_mod_cfg = beam_mm::ModCfg::load_from_path(&mods_dir)?;
+    let mut beamng_mod_cfg = beam_mm::game::ModCfg::load_from_path(&mods_dir)?;
 
     if args.list_presets {
         for preset in beam_mm::Preset::list(&presets_dir)? {
