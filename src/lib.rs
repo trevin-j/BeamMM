@@ -354,7 +354,9 @@ impl Preset {
     }
 
     pub fn disable(&mut self, mod_config: &mut ModCfg) -> Result<()> {
-        mod_config.set_mods_active(&self.mods, false)
+        mod_config.set_mods_active(&self.mods, false)?;
+        self.enabled = false;
+        Ok(())
     }
 
     pub fn get_enabled(&self) -> bool {
