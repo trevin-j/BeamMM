@@ -399,17 +399,6 @@ impl ModCfg {
     }
 
     pub fn apply_presets(&mut self, presets_dir: &Path) -> Result<()> {
-        // Get list of mods that need to be enabled from enabled presets
-        // This could produce duplicates but going through to remove duplicates would be more
-        // expensive than a few redundant operations.
-        // let mods: Vec<String> = Preset::list(presets_dir)? // Get all preset names
-        //     .map(|n| Preset::load_from_path(&n, presets_dir)?) // Map them to Preset structs by
-        //     // loading the preset files
-        //     .filter(|p| p.get_enabled()) // Filter out disabled presets
-        //     .map(|p| p.mods) // Get the mods of the enabled presets
-        //     .flatten()
-        //     .collect();
-
         let mut missing_mods = HashSet::new();
         let mut failed_presets = HashSet::new();
 
