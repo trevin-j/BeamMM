@@ -32,12 +32,26 @@ pub enum Error {
     #[error("Could not parse BeamNG.drive's version.txt for game version.")]
     VersionError,
     /// When the preset wasn't found.
+    ///
+    /// # Fields
+    ///
+    /// * `dir`: The directory where the preset was supposed to be.
+    /// * `preset`: The name of the preset that was missing.
     #[error("Could not find preset {preset} in {dir}")]
     MissingPreset { dir: PathBuf, preset: String },
     /// When mods are specified but not found.
+    ///
+    /// # Fields
+    ///
+    /// * `mods`: The mods that were specified but not found.
     #[error("Mods not found: {mods:?}")]
     MissingMods { mods: Vec<String> },
     // When a preset errors when enabling
+    //
+    // # Fields
+    //
+    // * `mods`: The mods that were missing.
+    // * `presets`: The presets that failed to enable.
     #[error("Presets failed to enable: {presets:?}, missing these mods: {mods:?}")]
     PresetsFailed {
         mods: HashSet<String>,
@@ -58,7 +72,14 @@ use Error::*;
 /// Check if a directory exists and create it if it doesn't. Consumes and returns the directory,
 /// making it simple to use at the end of a function.
 ///
-/// Errors only on filesystem errors.
+/// # Arguments
+///
+/// * `dir`: The directory to check and create if it doesn't exist.
+///
+/// # Errors
+///
+/// * `std::io::Error`: If there is a permission issue when checking if the directory exists or
+/// creating the directory.
 fn validate_dir(dir: PathBuf) -> Result<PathBuf> {
     if dir.try_exists()? {
         Ok(dir)
@@ -85,6 +106,21 @@ fn validate_dir(dir: PathBuf) -> Result<PathBuf> {
 /// * `DirNotFound`: if the specified `data_dir` doesn't exist.
 /// * `std::io::Error`: if there is trouble checking file existence or reading dir. Most likely due
 /// to permission issues.
+///
+/// # Examples
+///
+/// ```rust
+/// use beam_mm::game_version;
+/// # use tempfile::tempdir;
+///
+/// # let temp_dir = tempdir().unwrap();
+/// # let game_dir = temp_dir.path();
+/// # let version_file = game_dir.join("version.txt");
+/// # std::fs::write(&version_file, "0.32.0").unwrap();
+/// // Game dir should be the path to the base game data directory.
+/// // Most likely `%LocalAppData%/BeamNG.drive`
+/// let version = game_version(&game_dir).unwrap();
+/// ```
 pub fn game_version(data_dir: &Path) -> Result<String> {
     if !data_dir.try_exists()? {
         return Err(DirNotFound {
@@ -162,6 +198,19 @@ pub fn beamng_dir(custom_dir: &Option<PathBuf>) -> Result<PathBuf> {
 /// `DirNotFound`: When passed in data_dir doesn't exist or the mods dir under the current version
 /// dir doesn't exist. Try launching the game first?
 /// `std::io::Error`: If there is a permission error in checking the existence of any dirs.
+///
+/// # Examples
+///
+/// ```rust
+/// use beam_mm::mods_dir;
+/// # use tempfile::tempdir;
+///
+/// # let temp_dir = tempdir().unwrap();
+/// # let data_dir = temp_dir.path();
+/// # let version = "0.32";
+/// # std::fs::create_dir_all(data_dir.join(version).join("mods")).unwrap();
+/// let mods_dir = mods_dir(&data_dir, &version).unwrap();
+/// ```
 pub fn mods_dir(data_dir: &Path, version: &str) -> Result<PathBuf> {
     // Confirm data_dir even exists.
     if !data_dir.try_exists()? {
@@ -195,6 +244,27 @@ pub fn beammm_dir() -> Result<PathBuf> {
     validate_dir(dir)
 }
 
+/// Get the path to the presets directory and create it if it doesn't exist.
+///
+/// # Arguments
+///
+/// `beammm_dir`: The path to the beammm directory.
+///
+/// # Errors
+///
+/// * `std::io::Error` if there is a permissions issue when checking if the dir exists or if there
+/// is an issue creating the dir
+///
+/// # Examples
+///
+/// ```rust
+/// use beam_mm::presets_dir;
+/// # use tempfile::tempdir;
+///
+/// # let temp_dir = tempdir().unwrap();
+/// # let beammm_dir = temp_dir.path();
+/// let presets_dir = presets_dir(&beammm_dir).unwrap();
+/// ```
 pub fn presets_dir(beammm_dir: &Path) -> Result<PathBuf> {
     let dir = beammm_dir.join("presets");
     validate_dir(dir)
@@ -258,10 +328,37 @@ pub fn confirm_cli(msg: &str, default: bool, confirm_all: bool) -> Result<bool> 
     confirm(io::stdin().lock(), io::stdout(), msg, default, confirm_all)
 }
 
+/// A preset of mods suitable for enabling/disabling groups of mods.
+///
+/// Presets are stored as JSON files in the BeamMM/presets directory.
+///
+/// # Examples
+/// ```rust
+/// use beam_mm::Preset;
+/// # use tempfile::tempdir;
+///
+/// # let temp_dir = tempdir().unwrap();
+/// # let presets_dir = temp_dir.path();
+///
+/// let mods: Vec<String> = vec!["mod1".into(), "mod2".into()];
+///
+/// // Create a preset
+/// let mut new_preset = Preset::new("preset_name".into(), mods.clone());
+/// new_preset.save_to_path(&presets_dir).unwrap();
+///
+/// // Load a preset
+/// let loaded_preset = Preset::load_from_path("preset_name", &presets_dir).unwrap();
+/// assert_eq!(loaded_preset.get_mods(), &mods);
+/// ```
+///
+/// See additional preset examples in each function's documentation.
 #[derive(Serialize, Deserialize)]
 pub struct Preset {
+    /// The name of the preset.
     name: String,
+    /// The mods in the preset.
     mods: Vec<String>,
+    /// Whether the preset is enabled.
     enabled: bool,
 }
 
@@ -274,7 +371,8 @@ impl Preset {
     ///
     /// # Errors
     ///
-    /// Possible IO errors.
+    /// Possible IO errors if the path doesn't exist, there is a permission issue,
+    /// or if the path is not a directory.
     pub fn list(presets_dir: &Path) -> Result<impl Iterator<Item = String>> {
         Ok(fs::read_dir(presets_dir)?
             .filter_map(|f| f.ok().map(|f| f.path())) // Get rid of errors and map to path type
@@ -284,6 +382,12 @@ impl Preset {
             .filter_map(|f| f.with_extension("").into_os_string().into_string().ok()))
     }
 
+    /// Create a new preset.
+    ///
+    /// # Arguments
+    ///
+    /// `name`: The name of the preset.
+    /// `mods`: The mods to include in the preset.
     pub fn new(name: String, mods: Vec<String>) -> Self {
         Preset {
             name,
@@ -292,6 +396,15 @@ impl Preset {
         }
     }
 
+    /// Serialize and save the preset to a writer.
+    ///
+    /// # Arguments
+    ///
+    /// `writer`: The writer to save the preset to.
+    ///
+    /// # Errors
+    ///
+    /// Possible IO errors if there is an issue writing to the writer.
     pub fn save<W: Write>(&self, mut writer: W) -> Result<()> {
         serde_json::to_writer_pretty(&mut writer, self)?;
         writer.flush()?;
@@ -299,16 +412,45 @@ impl Preset {
         Ok(())
     }
 
+    /// Serialize and save the preset to a file.
+    ///
+    /// # Arguments
+    ///
+    /// `presets_dir`: The directory where the preset will be saved.
+    ///
+    /// # Errors
+    ///
+    /// Possible IO errors if there is an issue creating the file or writing to it.
     pub fn save_to_path(&self, presets_dir: &Path) -> Result<()> {
         let file = File::create(presets_dir.join(&self.name))?;
         let writer = BufWriter::new(file);
         self.save(writer)
     }
 
+    /// Deserialize and load a preset from a reader.
+    ///
+    /// # Arguments
+    ///
+    /// `reader`: The reader to load the preset from.
+    ///
+    /// # Errors
+    ///
+    /// Possible serde_json errors if there is an issue reading or deserializing the preset.
     pub fn load<R: BufRead>(reader: R) -> Result<Self> {
         Ok(serde_json::from_reader(reader)?)
     }
 
+    /// Deserialize and load a preset from a file.
+    ///
+    /// # Arguments
+    ///
+    /// `name`: The name of the preset to load.
+    /// `presets_dir`: The directory where the preset is stored.
+    ///
+    /// # Errors
+    ///
+    /// Possible IO errors if there is an issue reading the file or serde_json errors if there is
+    /// an issue deserializing the preset.
     pub fn load_from_path(name: &str, presets_dir: &Path) -> Result<Self> {
         let preset_path = presets_dir.join(name);
         if preset_path.try_exists()? {
@@ -323,23 +465,59 @@ impl Preset {
         }
     }
 
+    /// Delete a preset.
+    ///
+    /// # Arguments
+    ///
+    /// `name`: The name of the preset to delete.
+    /// `presets_dir`: The directory where the preset is stored.
+    ///
+    /// # Errors
+    ///
+    /// Possible IO errors if there is an issue deleting the file.
     pub fn delete(name: &str, presets_dir: &Path) -> Result<()> {
         fs::remove_file(presets_dir.join(name))?;
         Ok(())
     }
 
+    /// Add a mod to the preset.
+    ///
+    /// # Arguments
+    ///
+    /// `mod_name`: The name of the mod to add.
     pub fn add_mod(&mut self, mod_name: &str) {
         self.mods.push(String::from(mod_name))
     }
 
+    /// Add multiple mods to the preset.
+    ///
+    /// # Arguments
+    ///
+    /// `mods`: The mods to add.
     pub fn add_mods(&mut self, mods: &[String]) {
         self.mods.extend(mods.iter().cloned())
     }
 
+    /// Remove a mod from the preset.
+    ///
+    /// Does nothing if the mod isn't in the preset. If the mod is in the preset multiple times,
+    /// it removes every one. Duplicate mods is redundant anyway.
+    ///
+    /// # Arguments
+    ///
+    /// `mod_name`: The name of the mod to remove.
     pub fn remove_mod(&mut self, mod_name: &str) {
         self.mods.retain(|m| m != mod_name)
     }
 
+    /// Remove multiple mods from the preset.
+    ///
+    /// Does nothing if any mods aren't in the preset. If a mod is in the preset multiple times,
+    /// it removes every one. Duplicate mods is redundant anyway.
+    ///
+    /// # Arguments
+    ///
+    /// `mods`: The mods to remove.
     pub fn remove_mods(&mut self, mods: &[String]) {
         // Convert to HashSet so we can O(1) check if a mod is in the mods to remove.
         let values_to_remove: HashSet<&String> = mods.iter().collect();
@@ -347,45 +525,149 @@ impl Preset {
         self.mods.retain(|m| !values_to_remove.contains(m))
     }
 
-    // Enabling just allows the mod_cfg to check if it's enabled and enable its mods during
-    // ModCfg::apply_presets()
+    /// Enable the preset.
+    ///
+    /// This method is NOT simply fire and forget. It will set this preset as enabled and nothing
+    /// more. In order to actually enable the mods in this preset, the following steps must be
+    /// taken:
+    ///
+    /// 1. Call `Preset::enable` on the preset.
+    /// 2. Save the preset to the proper presets directory.
+    /// 3. Call `ModCfg::apply_presets` on the ModCfg to enable the mods in memory.
+    /// 4. Save the ModCfg to the proper mods directory, allowing the game to read the changes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use beam_mm::{Preset, ModCfg};
+    /// # use tempfile::tempdir;
+    ///
+    /// # // Set up temp mock directories
+    /// # let temp_presets_dir = tempdir().unwrap();
+    /// # let presets_dir = temp_presets_dir.path();
+    /// # let temp_mods_dir = tempdir().unwrap();
+    /// # let mods_dir = temp_mods_dir.path();
+    /// # // Make mods_dir/db.json
+    /// # std::fs::write(mods_dir.join("db.json"), "{\"mods\":{\"mod1\":{\"active\":false},\"mod2\":{\"active\":false}}}").unwrap();
+    /// #
+    /// let mut mod_cfg = ModCfg::load_from_path(&mods_dir).unwrap();
+    /// let mut preset = Preset::new("preset_name".into(), vec!["mod1".into(), "mod2".into()]);
+    ///
+    /// preset.enable();
+    /// preset.save_to_path(&presets_dir).unwrap();
+    ///
+    /// mod_cfg.apply_presets(&presets_dir).unwrap();
+    /// mod_cfg.save_to_path(&mods_dir).unwrap();
+    /// ```
     pub fn enable(&mut self) {
         self.enabled = true
     }
 
+    /// Disable the preset.
+    ///
+    /// Similarly to `Preset::enable`, this method is NOT simply fire and forget. It will set this
+    /// preset as disabled after modifying the ModCfg in memory. To actually disable the mods in
+    /// this preset, the following steps must be taken:
+    ///
+    /// 1. Call `Preset::disable` on the preset.
+    /// 2. Save the preset to the proper presets directory.
+    /// 3. Call `ModCfg::apply_presets` on the ModCfg to enable the mods in memory for ENABLED
+    ///    presets.
+    /// 4. Save the ModCfg to the proper mods directory, allowing the game to read the changes.
+    ///
+    /// Calling this function does IMMEDIATELY disable the mods in the preset in memory. The reason
+    /// this disables mods but still needs to be saved and applied is because the ModCfg needs to
+    /// be able to re-enable any mods that are in other enabled presets.
+    ///
+    /// # Errors
+    ///
+    /// MissingMods: If one or more mods in the preset doesn't exist in the ModCfg.
+    ///
+    /// In case of error, ModCfg and this preset will remain unchanged.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use beam_mm::{Preset, ModCfg};
+    /// # use tempfile::tempdir;
+    ///
+    /// # // Set up temp mock directories
+    /// # let temp_presets_dir = tempdir().unwrap();
+    /// # let presets_dir = temp_presets_dir.path();
+    /// # let temp_mods_dir = tempdir().unwrap();
+    /// # let mods_dir = temp_mods_dir.path();
+    /// # // Make mods_dir/db.json
+    /// # std::fs::write(mods_dir.join("db.json"), "{\"mods\":{\"mod1\":{\"active\":true},\"mod2\":{\"active\":true}}}").unwrap();
+    /// #
+    /// let mut mod_cfg = ModCfg::load_from_path(&mods_dir).unwrap();
+    /// let mut preset = Preset::new("preset_name".into(), vec!["mod1".into(), "mod2".into()]);
+    ///
+    /// preset.disable(&mut mod_cfg).unwrap();
+    /// preset.save_to_path(&presets_dir).unwrap();
+    ///
+    /// mod_cfg.apply_presets(&presets_dir).unwrap();
+    /// mod_cfg.save_to_path(&mods_dir).unwrap();
+    /// ```
     pub fn disable(&mut self, mod_config: &mut ModCfg) -> Result<()> {
         mod_config.set_mods_active(&self.mods, false)?;
         self.enabled = false;
         Ok(())
     }
 
+    /// Get the enabled status of the preset.
     pub fn get_enabled(&self) -> bool {
         self.enabled
     }
 
+    /// Get a list of mods in the preset.
     pub fn get_mods(&self) -> &Vec<String> {
         &self.mods
     }
 }
 
+/// A struct representing BeamNG.drive's mod configuration.
+///
+/// This struct is used to load, modify, and save the game's mod configuration.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ModCfg {
+    /// Installed mods and their data.
     mods: HashMap<String, Mod>,
 
-    /// Data that is unimportant to us.
+    /// Additional data that is currently unimportant to us but should be preserved.
     #[serde(flatten)]
     other: HashMap<String, Value>,
 }
 
 impl ModCfg {
+    /// The filename of the mod configuration file.
     fn filename() -> PathBuf {
         PathBuf::from("db.json")
     }
 
+    /// Load the mod configuration from a reader.
+    ///
+    /// # Arguments
+    ///
+    /// `reader`: The reader to load the mod configuration from.
+    ///
+    /// # Errors
+    ///
+    /// Possible serde_json errors if there is an issue reading or deserializing the mod
+    /// configuration.
     pub fn load<R: BufRead>(reader: R) -> Result<Self> {
         Ok(serde_json::from_reader(reader)?)
     }
 
+    /// Load the mod configuration from a file.
+    ///
+    /// # Arguments
+    ///
+    /// `mods_dir`: The directory where the mod configuration file is stored.
+    ///
+    /// # Errors
+    ///
+    /// Possible IO errors if there is an issue reading the file or serde_json errors if there is
+    /// an issue deserializing the mod configuration.
     pub fn load_from_path(mods_dir: &Path) -> Result<Self> {
         if mods_dir.try_exists()? {
             let file = File::open(mods_dir.join(Self::filename()))?;
@@ -398,6 +680,45 @@ impl ModCfg {
         }
     }
 
+    /// Apply all enabled presets in the presets directory.
+    ///
+    /// If a preset errors for any reason when enabling, said preset's mods will NOT be
+    /// enabled. Any successfully enabled presets will have its mods fully enabled regardless of
+    /// other presets erroring.
+    ///
+    /// # Arguments
+    ///
+    /// `presets_dir`: The directory where the presets are stored.
+    ///
+    /// # Errors
+    ///
+    /// MissingMods: If one or more mods in a preset doesn't exist in the ModCfg.
+    /// PresetsFailed: If one or more presets failed to enable due to missing mods.
+    /// Other errors: If there is an IO error when reading the presets directory or if there is an
+    /// issue serializing the presets.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use beam_mm::{Preset, ModCfg};
+    /// # use tempfile::tempdir;
+    ///
+    /// # // Set up temp mock directories
+    /// # let temp_presets_dir = tempdir().unwrap();
+    /// # let presets_dir = temp_presets_dir.path();
+    /// # let temp_mods_dir = tempdir().unwrap();
+    /// # let mods_dir = temp_mods_dir.path();
+    /// # // Make mods_dir/db.json
+    /// # std::fs::write(mods_dir.join("db.json"), "{\"mods\":{\"mod1\":{\"active\":true},\"mod2\":{\"active\":true}}}").unwrap();
+    /// #
+    /// let mut mod_cfg = ModCfg::load_from_path(&mods_dir).unwrap();
+    /// let mut preset = Preset::new("preset_name".into(), vec!["mod1".into(), "mod2".into()]);
+    ///
+    /// preset.disable(&mut mod_cfg).unwrap();
+    /// preset.save_to_path(&presets_dir).unwrap();
+    ///
+    /// mod_cfg.apply_presets(&presets_dir).unwrap();
+    /// mod_cfg.save_to_path(&mods_dir).unwrap();
+    /// ```
     pub fn apply_presets(&mut self, presets_dir: &Path) -> Result<()> {
         let mut missing_mods = HashSet::new();
         let mut failed_presets = HashSet::new();
@@ -428,6 +749,16 @@ impl ModCfg {
         }
     }
 
+    /// Serialize and save the mod configuration to a writer.
+    ///
+    /// # Arguments
+    ///
+    /// `writer`: The writer to save the mod configuration to.
+    ///
+    /// # Errors
+    ///
+    /// Possible serde_json errors if there is an issue serializing the mod configuration or
+    /// writing.
     pub fn save<W: Write>(&self, mut writer: W) -> Result<()> {
         serde_json::to_writer_pretty(&mut writer, self)?;
         writer.flush()?;
@@ -435,12 +766,32 @@ impl ModCfg {
         Ok(())
     }
 
+    /// Serialize and save the mod configuration to a file.
+    ///
+    /// # Arguments
+    ///
+    /// `mods_dir`: The directory where the mod configuration file will be saved.
+    ///
+    /// # Errors
+    ///
+    /// Possible IO errors if there is an issue creating the file or writing to it.
+    /// Possible serde_json errors if there is an issue serializing the mod configuration.
     pub fn save_to_path(&self, mods_dir: &Path) -> Result<()> {
         let file = File::create(mods_dir.join(Self::filename()))?;
         let writer = BufWriter::new(file);
         self.save(writer)
     }
 
+    /// Set a mod to be active or inactive.
+    ///
+    /// # Arguments
+    ///
+    /// `mod_name`: The name of the mod to set active or inactive.
+    /// `active`: Whether the mod should be active or inactive.
+    ///
+    /// # Errors
+    ///
+    /// MissingMods: If the mod doesn't exist in the ModCfg.
     pub fn set_mod_active(&mut self, mod_name: &str, active: bool) -> Result<()> {
         if let Some(mod_) = self.mods.get_mut(mod_name) {
             mod_.active = active;
@@ -452,10 +803,20 @@ impl ModCfg {
         }
     }
 
-    // This function needs to only change self if everything is successful. If even one mod fails
-    // somewhere, self should be returned unchanged.
+    /// Set multiple mods to be active or inactive.
+    ///
+    /// If any mods don't exist in the ModCfg, no mods will be set active or inactive.
+    ///
+    /// # Arguments
+    ///
+    /// `mod_names`: The names of the mods to set active or inactive.
+    /// `active`: Whether the mods should be active or inactive.
+    ///
+    /// # Errors
+    ///
+    /// MissingMods: If one or more mods don't exist in the ModCfg.
     pub fn set_mods_active(&mut self, mod_names: &[String], active: bool) -> Result<()> {
-        // First validate mods. If all exist, then we will push
+        // First validate mods. If all exist, then we will set them active.
         let mut missing_mods = vec![];
         for mod_name in mod_names {
             if !self.mods.contains_key(mod_name) {
@@ -475,22 +836,33 @@ impl ModCfg {
         }
     }
 
+    /// Get a list of mods in the mod configuration.
     pub fn get_mods(&self) -> impl Iterator<Item = &String> {
         self.mods.keys()
     }
 
+    /// Set all mods to be active or inactive.
+    ///
+    /// # Arguments
+    ///
+    /// `active`: Whether the mods should be active or inactive.
+    ///
+    /// # Errors
+    ///
+    /// MissingMods: If one or more mods don't exist in the ModCfg.
     pub fn set_all_mods_active(&mut self, active: bool) -> Result<()> {
         let mods: Vec<String> = self.get_mods().cloned().collect();
         self.set_mods_active(&mods, active)
     }
 }
 
+/// A struct representing a BeamNG.drive mod.
 #[derive(Serialize, Deserialize, Debug)]
 struct Mod {
-    // There is not yet a reason to give external access to Mod so keep private for now
+    /// Whether the mod is active.
     active: bool,
 
-    /// Other unimportant data.
+    /// Other currently unimportant data.
     #[serde(flatten)]
     other: HashMap<String, Value>,
 }
