@@ -362,6 +362,10 @@ impl Preset {
     pub fn get_enabled(&self) -> bool {
         self.enabled
     }
+
+    pub fn get_mods(&self) -> &Vec<String> {
+        &self.mods
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
