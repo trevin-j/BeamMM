@@ -1,6 +1,5 @@
 use dirs;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::{
     collections::{HashMap, HashSet},
     ffi::OsStr,
@@ -635,7 +634,7 @@ pub struct ModCfg {
 
     /// Additional data that is currently unimportant to us but should be preserved.
     #[serde(flatten)]
-    other: HashMap<String, Value>,
+    other: HashMap<String, serde_json::Value>,
 }
 
 impl ModCfg {
@@ -864,5 +863,5 @@ struct Mod {
 
     /// Other currently unimportant data.
     #[serde(flatten)]
-    other: HashMap<String, Value>,
+    other: HashMap<String, serde_json::Value>,
 }
