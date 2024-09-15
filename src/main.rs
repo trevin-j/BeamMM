@@ -57,7 +57,16 @@ struct Args {
 fn main() -> beam_mm::Result<()> {
     let args = Args::parse();
 
-    let beamng_dir = beamng_dir(&args.custom_data_dir)?;
+    let beamng_dir = if let Some(dir) = args.custom_data_dir {
+        if dir.try_exists()? {
+            dir
+        } else {
+            return Err(beam_mm::Error::DirNotFound { dir });
+        }
+    } else {
+        beamng_dir_default()?
+    };
+
     let beamng_version = beam_mm::game_version(&beamng_dir)?;
     let mods_dir = mods_dir(&beamng_dir, &beamng_version)?;
     let beammm_dir = beammm_dir()?;

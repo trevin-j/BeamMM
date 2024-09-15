@@ -29,29 +29,28 @@ fn validate_dir(dir: PathBuf) -> Result<PathBuf> {
 ///
 /// # Arguments
 ///
-/// * `custom_dir`: Optionally specify a custom directory where BeamNG holds its data. It will be
-///     checked to make sure it exists; if it does not, `Err(SpecDirNotExists)` will be returned.
+/// * `possible_dirs`: An iterator of possible directories to check for the game's data directory.
 ///
 /// # Errors
 ///
-/// * `DirNotFound`: When a custom directory is specified but it doesn't exist.
 /// * `GameDirNotFound`: When the game's data directory cannot be found automatically.
-pub fn beamng_dir(custom_dir: &Option<PathBuf>) -> Result<PathBuf> {
-    if let Some(custom_dir) = custom_dir {
-        if custom_dir.try_exists()? {
-            Ok(custom_dir.to_owned())
-        } else {
-            Err(DirNotFound {
-                dir: custom_dir.to_owned(),
-            })
-        }
-    } else {
-        vec![dirs::data_local_dir(), dirs::data_dir()] // Possible data dirs to look for game dir in
-            .into_iter()
-            .filter_map(|d| d.map(|d| d.join("BeamNG.drive"))) // Filter None, unwrap, and concat "BeamNG.drive" to path.
-            .find(|d| d.try_exists().unwrap_or(false)) // Find the first existing path.
-            .ok_or(GameDirNotFound {})
-    }
+pub fn beamng_dir(possible_dirs: impl Iterator<Item = PathBuf>) -> Result<PathBuf> {
+    possible_dirs
+        .map(|d| d.join("BeamNG.drive"))
+        .find(|d| d.try_exists().unwrap_or(false)) // Find the first existing path.
+        .ok_or(GameDirNotFound)
+}
+
+/// Get the BeamNG.drive data directory based on the game's default data directories.
+///
+/// # Errors
+///
+/// * `GameDirNotFound`: When the game's data directory cannot be found automatically.
+pub fn beamng_dir_default() -> Result<PathBuf> {
+    let possible_dirs = vec![dirs::data_local_dir(), dirs::data_dir()]
+        .into_iter()
+        .filter_map(|d| d);
+    beamng_dir(possible_dirs)
 }
 
 /// Get the BeamNG.drive mods folder based on the game's base data dir and the game's version.
