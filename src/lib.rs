@@ -288,4 +288,13 @@ mod tests {
 
         assert_eq!(version, "0.33");
     }
+
+    #[test]
+    fn test_game_version_bad_directory() {
+        let game_dir = Path::new("nonexistent");
+
+        let version = game_version(&game_dir);
+
+        assert!(version.is_err());
+    }
 }
