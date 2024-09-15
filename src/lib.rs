@@ -294,6 +294,6 @@ mod tests {
 
         let version = game_version(game_dir);
 
-        assert!(version.is_err());
+        assert!(matches!(version, Err(DirNotFound { .. })));
     }
 }
