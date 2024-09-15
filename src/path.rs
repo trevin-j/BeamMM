@@ -49,7 +49,7 @@ pub fn beamng_dir(possible_dirs: impl Iterator<Item = PathBuf>) -> Result<PathBu
 pub fn beamng_dir_default() -> Result<PathBuf> {
     let possible_dirs = vec![dirs::data_local_dir(), dirs::data_dir()]
         .into_iter()
-        .filter_map(|d| d);
+        .flatten();
     beamng_dir(possible_dirs)
 }
 

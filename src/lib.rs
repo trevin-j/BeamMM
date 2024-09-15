@@ -127,8 +127,7 @@ pub fn game_version(data_dir: &Path) -> Result<String> {
             .filter_map(
                 |d| {
                     d.file_name()
-                        .map(|d| d.to_str()) // Convert dir name to str.
-                        .flatten()
+                        .and_then(|d| d.to_str()) // Convert dir name to str.
                         .map(|d| d.trim().parse::<f32>()) // Parse dir name to float (for version number).
                         .filter(|n| n.is_ok()) // Toss out dirs that failed to convert to float.
                         .map(|n| n.unwrap())
@@ -269,7 +268,7 @@ mod tests {
 
         std::fs::write(&version_file, "0.32.0").unwrap();
 
-        let version = game_version(&game_dir).unwrap();
+        let version = game_version(game_dir).unwrap();
 
         assert_eq!(version, "0.32");
     }
@@ -284,7 +283,7 @@ mod tests {
         std::fs::create_dir(game_dir.join("0.32")).unwrap();
         std::fs::create_dir(game_dir.join("0.33")).unwrap();
 
-        let version = game_version(&game_dir).unwrap();
+        let version = game_version(game_dir).unwrap();
 
         assert_eq!(version, "0.33");
     }
@@ -293,7 +292,7 @@ mod tests {
     fn test_game_version_bad_directory() {
         let game_dir = Path::new("nonexistent");
 
-        let version = game_version(&game_dir);
+        let version = game_version(game_dir);
 
         assert!(version.is_err());
     }
