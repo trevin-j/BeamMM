@@ -195,3 +195,60 @@ pub fn confirm<R: BufRead, W: Write>(
 pub fn confirm_cli(msg: &str, default: bool, confirm_all: bool) -> Result<bool> {
     confirm(io::stdin().lock(), io::stdout(), msg, default, confirm_all)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_confirm() {
+        // We need to test the following situations:
+        // 1. Default is true, user inputs "n" -> false
+        // 2. Default is true, user inputs "y" -> true
+        // 3. Default is true, user inputs nothing -> true
+        // 4. Default is false, user inputs "n" -> false
+        // 5. Default is false, user inputs "y" -> true
+        // 6. Default is false, user inputs nothing -> false
+
+        let input_y = b"y\n";
+        let input_n = b"n\n";
+        let input_nothing = b"\n";
+
+        let mut writer = Vec::new();
+
+        let msg = "Are you sure?";
+        let confirm_all = false;
+
+        {
+            let mut reader_n = io::BufReader::new(&input_n[..]);
+            let result = confirm(&mut reader_n, &mut writer, msg, true, confirm_all).unwrap();
+            assert!(!result);
+        }
+        {
+            let mut reader_y = io::BufReader::new(&input_y[..]);
+            let result = confirm(&mut reader_y, &mut writer, msg, true, confirm_all).unwrap();
+            assert!(result);
+        }
+        {
+            let mut reader_nothing = io::BufReader::new(&input_nothing[..]);
+            let result = confirm(&mut reader_nothing, &mut writer, msg, true, confirm_all).unwrap();
+            assert!(result);
+        }
+        {
+            let mut reader_n = io::BufReader::new(&input_n[..]);
+            let result = confirm(&mut reader_n, &mut writer, msg, false, confirm_all).unwrap();
+            assert!(!result);
+        }
+        {
+            let mut reader_y = io::BufReader::new(&input_y[..]);
+            let result = confirm(&mut reader_y, &mut writer, msg, false, confirm_all).unwrap();
+            assert!(result);
+        }
+        {
+            let mut reader_nothing = io::BufReader::new(&input_nothing[..]);
+            let result =
+                confirm(&mut reader_nothing, &mut writer, msg, false, confirm_all).unwrap();
+            assert!(!result);
+        }
+    }
+}
