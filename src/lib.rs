@@ -117,7 +117,7 @@ pub fn game_version(data_dir: &Path) -> Result<String> {
         let mut split_version = full_version.trim().split(".");
         let major_version = split_version.next().ok_or(VersionError)?;
         let minor_version = split_version.next().ok_or(VersionError)?;
-        Ok(format!("{},{}", major_version, minor_version))
+        Ok(format!("{}.{}", major_version, minor_version))
     } else {
         // If there is no version.txt, a fallback is to list all the version directories and find
         // the latest one, assuming it is correct.
@@ -199,6 +199,7 @@ pub fn confirm_cli(msg: &str, default: bool, confirm_all: bool) -> Result<bool> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_confirm() {
@@ -250,5 +251,18 @@ mod tests {
                 confirm(&mut reader_nothing, &mut writer, msg, false, confirm_all).unwrap();
             assert!(!result);
         }
+    }
+
+    #[test]
+    fn test_game_version() {
+        let temp_dir = tempdir().unwrap();
+        let game_dir = temp_dir.path();
+        let version_file = game_dir.join("version.txt");
+
+        std::fs::write(&version_file, "0.32.0").unwrap();
+
+        let version = game_version(&game_dir).unwrap();
+
+        assert_eq!(version, "0.32");
     }
 }
