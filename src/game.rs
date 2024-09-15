@@ -108,7 +108,7 @@ impl ModCfg {
         for preset_name in Preset::list(presets_dir)? {
             let preset = Preset::load_from_path(&preset_name, presets_dir)?;
             if preset.get_enabled() {
-                match self.set_mods_active(&preset.get_mods(), true) {
+                match self.set_mods_active(preset.get_mods(), true) {
                     Ok(()) => (),
                     Err(e) => match e {
                         MissingMods { mods } => {
@@ -121,7 +121,7 @@ impl ModCfg {
             }
         }
 
-        if failed_presets.len() > 0 {
+        if !failed_presets.is_empty() {
             Err(PresetsFailed {
                 mods: missing_mods,
                 presets: failed_presets,
@@ -206,7 +206,7 @@ impl ModCfg {
             }
         }
 
-        if missing_mods.len() > 0 {
+        if !missing_mods.is_empty() {
             Err(MissingMods { mods: missing_mods })
         } else {
             for mod_name in mod_names {

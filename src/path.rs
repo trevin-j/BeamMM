@@ -15,7 +15,7 @@ use std::{
 /// # Errors
 ///
 /// * `std::io::Error`: If there is a permission issue when checking if the directory exists or
-/// creating the directory.
+///     creating the directory.
 fn validate_dir(dir: PathBuf) -> Result<PathBuf> {
     if dir.try_exists()? {
         Ok(dir)
@@ -30,7 +30,7 @@ fn validate_dir(dir: PathBuf) -> Result<PathBuf> {
 /// # Arguments
 ///
 /// * `custom_dir`: Optionally specify a custom directory where BeamNG holds its data. It will be
-/// checked to make sure it exists; if it does not, `Err(SpecDirNotExists)` will be returned.
+///     checked to make sure it exists; if it does not, `Err(SpecDirNotExists)` will be returned.
 ///
 /// # Errors
 ///
@@ -49,8 +49,7 @@ pub fn beamng_dir(custom_dir: &Option<PathBuf>) -> Result<PathBuf> {
         vec![dirs::data_local_dir(), dirs::data_dir()] // Possible data dirs to look for game dir in
             .into_iter()
             .filter_map(|d| d.map(|d| d.join("BeamNG.drive"))) // Filter None, unwrap, and concat "BeamNG.drive" to path.
-            .filter(|d| d.try_exists().unwrap_or(false)) // Filter out non-existing paths.
-            .next() // Grab the first directory - most likely the only directory.
+            .find(|d| d.try_exists().unwrap_or(false)) // Find the first existing path.
             .ok_or(GameDirNotFound {})
     }
 }
@@ -104,7 +103,7 @@ pub fn mods_dir(data_dir: &Path, version: &str) -> Result<PathBuf> {
 ///
 /// * `MissingLocalAppdata` if there is a problem retrieving the `%LocalAppData%` Windows variable
 /// * `std::io::Error` if there is a permissions issue when checking if the dir exists or if there is
-/// an issue creating the dir
+///     an issue creating the dir
 pub fn beammm_dir() -> Result<PathBuf> {
     let dir = dirs::data_local_dir()
         .ok_or(MissingLocalAppdata)?
@@ -122,7 +121,7 @@ pub fn beammm_dir() -> Result<PathBuf> {
 /// # Errors
 ///
 /// * `std::io::Error` if there is a permissions issue when checking if the dir exists or if there
-/// is an issue creating the dir
+///     is an issue creating the dir
 ///
 /// # Examples
 ///

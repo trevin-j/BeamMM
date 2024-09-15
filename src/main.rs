@@ -99,12 +99,12 @@ fn main() -> beam_mm::Result<()> {
     // Handle operations that require args.mods to exist.
     if let Some(mods) = args.mods {
         // Check of mods argument is "all"
-        let all_mods = Some(String::from("all")) == mods.get(0).map(|s| s.to_lowercase());
+        let all_mods = Some(String::from("all")) == mods.first().map(|s| s.to_lowercase());
 
         if args.enable {
             if all_mods {
                 let confirmation = beam_mm::confirm_cli(
-                    "Are you sure you would like to enable all mods?".into(),
+                    "Are you sure you would like to enable all mods?",
                     true,
                     args.confirm_all,
                 )?;
@@ -118,7 +118,7 @@ fn main() -> beam_mm::Result<()> {
         if args.disable {
             if all_mods {
                 let confirmation = beam_mm::confirm_cli(
-                    "Are you sure you would like to disable all mods?".into(),
+                    "Are you sure you would like to disable all mods?",
                     false,
                     args.confirm_all,
                 )?;

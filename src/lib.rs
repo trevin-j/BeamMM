@@ -76,18 +76,18 @@ use Error::*;
 /// # Arguments
 ///
 /// * `data_dir`: The game's data directory. Usually `%LocalAppData%/BeamNG.Drive`. Can be found
-/// using `beam_mm::beamng_dir(dir)`
+///     using `beam_mm::beamng_dir(dir)`
 ///
 /// # Errors
 ///
 /// * `VersionError`:
-///   * If the `version.txt` file exists but there is an issue with parsing the version
-///   major.minor.
-///   * If there is no `version.txt` and there is trouble manually discovering the version based on
-///   the existing game version directories.
+///     * If the `version.txt` file exists but there is an issue with parsing the version
+///         major.minor.
+///     * If there is no `version.txt` and there is trouble manually discovering the version based on
+///         the existing game version directories.
 /// * `DirNotFound`: if the specified `data_dir` doesn't exist.
 /// * `std::io::Error`: if there is trouble checking file existence or reading dir. Most likely due
-/// to permission issues.
+///     to permission issues.
 ///
 /// # Examples
 ///
