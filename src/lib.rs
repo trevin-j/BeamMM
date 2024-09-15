@@ -253,6 +253,12 @@ mod tests {
                 confirm(&mut reader_nothing, &mut writer, msg, false, confirm_all).unwrap();
             assert!(!result);
         }
+        // If confirm_all is true, it should always return true.
+        {
+            let mut reader_n = io::BufReader::new(&input_n[..]);
+            let result = confirm(&mut reader_n, &mut writer, msg, true, true).unwrap();
+            assert!(result);
+        }
     }
 
     #[test]
