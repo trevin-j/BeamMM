@@ -157,4 +157,31 @@ mod tests {
         // Make sure it exists now.
         assert!(not_exists.exists());
     }
+
+    #[test]
+    fn test_beamng_dir() {
+        let tmp = tempfile::tempdir().unwrap();
+        let temp_dir = tmp.path();
+
+        // Create two possible dirs. One with BeamNG.drive and one without.
+        let with_beamng = temp_dir.join("with_beamng");
+        fs::create_dir(&with_beamng).unwrap();
+        let with_beamng_drive = with_beamng.join("BeamNG.drive");
+        fs::create_dir(&with_beamng_drive).unwrap();
+
+        let without_beamng = temp_dir.join("without_beamng");
+        fs::create_dir(&without_beamng).unwrap();
+
+        // Check that it returns the correct path including BeamNG.drive.
+        assert_eq!(
+            beamng_dir(vec![with_beamng.clone(), without_beamng.clone()].into_iter()).unwrap(),
+            with_beamng_drive
+        );
+
+        // Check that it returns an error when BeamNG.drive doesn't exist.
+        assert!(matches!(
+            beamng_dir(vec![without_beamng.clone()].into_iter()).unwrap_err(),
+            GameDirNotFound
+        ));
+    }
 }
