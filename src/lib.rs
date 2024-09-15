@@ -126,8 +126,10 @@ pub fn game_version(data_dir: &Path) -> Result<String> {
             .filter(|f| f.is_dir()) // Toss out non-dirs.
             .filter_map(
                 |d| {
-                    d.to_str() // Convert dir name to str.
-                        .map(|d| d.parse::<f32>()) // Parse dir name to float (for version number).
+                    d.file_name()
+                        .map(|d| d.to_str()) // Convert dir name to str.
+                        .flatten()
+                        .map(|d| d.trim().parse::<f32>()) // Parse dir name to float (for version number).
                         .filter(|n| n.is_ok()) // Toss out dirs that failed to convert to float.
                         .map(|n| n.unwrap())
                 }, // Safe to unwrap now that we know each value is Ok.
@@ -264,5 +266,20 @@ mod tests {
         let version = game_version(&game_dir).unwrap();
 
         assert_eq!(version, "0.32");
+    }
+
+    /// Discover the game version based on the folders in the game data directory.
+    #[test]
+    fn test_discover_game_version() {
+        let temp_dir = tempdir().unwrap();
+        let game_dir = temp_dir.path();
+        // Make a few directories with version numbers.
+        std::fs::create_dir(game_dir.join("0.31")).unwrap();
+        std::fs::create_dir(game_dir.join("0.32")).unwrap();
+        std::fs::create_dir(game_dir.join("0.33")).unwrap();
+
+        let version = game_version(&game_dir).unwrap();
+
+        assert_eq!(version, "0.33");
     }
 }
