@@ -137,3 +137,25 @@ pub fn presets_dir(beammm_dir: &Path) -> Result<PathBuf> {
     let dir = beammm_dir.join("presets");
     validate_dir(dir)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_dir() {
+        let tmp = tempfile::tempdir().unwrap();
+        let temp_dir = tmp.path();
+
+        // Create a dir called "exists" and validate it.
+        let exists = temp_dir.join("exists");
+        fs::create_dir(&exists).unwrap();
+        assert_eq!(validate_dir(exists.clone()).unwrap(), exists);
+
+        // Validate a dir that doesn't exist.
+        let not_exists = temp_dir.join("not_exists");
+        assert_eq!(validate_dir(not_exists.clone()).unwrap(), not_exists);
+        // Make sure it exists now.
+        assert!(not_exists.exists());
+    }
+}
