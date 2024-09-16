@@ -59,7 +59,12 @@ impl Preset {
             .filter(|f| f.is_file() && f.extension().unwrap_or(OsStr::new("")) == "json") // Filter out dirs and non-json files
             // Map to remove the json extension so we just have the preset name and convert to String
             // if the os string into_string fails, it gets converted to None which gets filtered out
-            .filter_map(|f| f.with_extension("").into_os_string().into_string().ok()))
+            .filter_map(|f| {
+                f.with_extension("")
+                    .file_name()
+                    .and_then(OsStr::to_str)
+                    .map(|f| f.to_string())
+            }))
     }
 
     /// Create a new preset.
@@ -302,5 +307,18 @@ impl Preset {
     /// Get a list of mods in the preset.
     pub fn get_mods(&self) -> &Vec<String> {
         &self.mods
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::MockData;
+
+    #[test]
+    fn listing_presets() {
+        let mock = MockData::new();
+        let presets = Preset::list(&mock.presets_dir).unwrap().collect::<Vec<_>>();
+        assert_eq!(presets, vec!["preset1", "preset2"]);
     }
 }

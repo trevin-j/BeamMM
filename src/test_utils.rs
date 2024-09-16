@@ -23,6 +23,7 @@ impl MockData {
         let presets_dir = _presets_dir_temp.path().to_path_buf();
 
         Self::create_db_json(&mods_dir);
+        Self::create_mock_presets(&presets_dir);
 
         let modcfg = game::ModCfg::load_from_path(&mods_dir).unwrap();
 
@@ -36,7 +37,7 @@ impl MockData {
     }
 
     fn create_db_json(dir: &Path) {
-        // NOTE: Changing this JSON could break tests.
+        // NOTE: Changing this JSON will most likely break some tests!
         let db_json = r#"{
             "mods": {
                 "mod1": {
@@ -58,5 +59,27 @@ impl MockData {
         }"#;
 
         std::fs::write(dir.join("db.json"), db_json).unwrap();
+    }
+
+    fn create_mock_presets(dir: &Path) {
+        // NOTE: Changing these JSONs will most likely break some tests!
+        let preset1 = r#"{
+            "name": "preset1",
+            "mods": [
+                "mod1"
+            ],
+            "enabled": true
+        }"#;
+
+        let preset2 = r#"{
+            "name": "preset2",
+            "mods": [
+                "mod2"
+            ],
+            "enabled": false
+        }"#;
+
+        std::fs::write(dir.join("preset1.json"), preset1).unwrap();
+        std::fs::write(dir.join("preset2.json"), preset2).unwrap();
     }
 }
