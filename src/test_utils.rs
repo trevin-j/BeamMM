@@ -1,3 +1,5 @@
+#![cfg(test)]
+
 use crate::*;
 use tempfile::tempdir;
 
@@ -14,6 +16,8 @@ pub struct MockData {
     _presets_dir_temp: tempfile::TempDir,
     pub presets_dir: PathBuf,
     pub modcfg: game::ModCfg,
+    pub preset1: Preset,
+    pub preset2: Preset,
 }
 
 impl MockData {
@@ -26,7 +30,7 @@ impl MockData {
         let presets_dir = _presets_dir_temp.path().to_path_buf();
 
         Self::create_db_json(&mods_dir);
-        Self::create_mock_presets(&presets_dir);
+        let (preset1, preset2) = Self::create_mock_presets(&presets_dir);
 
         let modcfg = game::ModCfg::load_from_path(&mods_dir).unwrap();
 
@@ -36,6 +40,8 @@ impl MockData {
             _presets_dir_temp,
             presets_dir,
             modcfg,
+            preset1,
+            preset2,
         }
     }
 
@@ -64,7 +70,7 @@ impl MockData {
         std::fs::write(dir.join("db.json"), db_json).unwrap();
     }
 
-    fn create_mock_presets(dir: &Path) {
+    fn create_mock_presets(dir: &Path) -> (Preset, Preset) {
         // NOTE: Changing these JSONs will most likely break some tests!
         let preset1 = r#"{
             "name": "preset1",
@@ -77,6 +83,7 @@ impl MockData {
         let preset2 = r#"{
             "name": "preset2",
             "mods": [
+                "mod1",
                 "mod2"
             ],
             "enabled": false
@@ -84,5 +91,10 @@ impl MockData {
 
         std::fs::write(dir.join("preset1.json"), preset1).unwrap();
         std::fs::write(dir.join("preset2.json"), preset2).unwrap();
+
+        (
+            Preset::load_from_path("preset1", dir).unwrap(),
+            Preset::load_from_path("preset2", dir).unwrap(),
+        )
     }
 }

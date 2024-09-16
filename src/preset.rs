@@ -361,7 +361,9 @@ mod tests {
 
     #[test]
     fn adding_mods() {
-        let mut preset = Preset::new("preset4".into(), vec!["mod1".into()]);
+        let mock = MockData::new();
+        let mut preset = mock.preset1;
+
         preset.add_mod("mod2");
         preset.add_mods(&["mod3".into(), "mod4".into()]);
 
@@ -380,5 +382,37 @@ mod tests {
         preset.remove_mods(&["mod1".into(), "mod4".into()]);
 
         assert_eq!(preset.get_mods(), &["mod3"]);
+    }
+
+    #[test]
+    fn enabling_preset() {
+        let mock = MockData::new();
+        // preset2 is disabled in the mock whereas preset1 is enabled.
+        let mut preset = mock.preset2;
+
+        preset.enable();
+        preset.save_to_path(&mock.presets_dir).unwrap();
+
+        // Here we should apply the preset using ModCfg but that needs to be tested elsewhere. All
+        // we care about here is if it successfully enabled the preset.
+
+        let loaded_preset = Preset::load_from_path("preset2", &mock.presets_dir).unwrap();
+        assert!(loaded_preset.get_enabled());
+    }
+
+    #[test]
+    fn disabling_preset() {
+        let mock = MockData::new();
+        let mut mod_cfg = mock.modcfg;
+        let mut preset = mock.preset1;
+
+        preset.disable(&mut mod_cfg).unwrap();
+
+        // Here we should apply the preset using ModCfg but that needs to be tested elsewhere. All
+        // we care about here is if it successfully disabled the preset and disabled all its mods
+        // in the ModCfg.
+
+        assert!(!preset.get_enabled());
+        assert!(!mod_cfg.is_mod_active("mod1").unwrap());
     }
 }
