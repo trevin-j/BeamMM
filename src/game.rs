@@ -220,6 +220,7 @@ impl ModCfg {
     }
 
     /// Get a list of mods in the mod configuration.
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn get_mods(&self) -> impl Iterator<Item = &String> {
         self.mods.keys()
     }
@@ -414,5 +415,21 @@ mod tests {
         // Check that no mods were set active.
         assert!(mod_cfg.mods.get("mod1").unwrap().active);
         assert!(!mod_cfg.mods.get("mod2").unwrap().active);
+    }
+
+    #[test]
+    fn set_all_mods_active() {
+        let mock_dirs = MockDirs::new();
+
+        let mut mod_cfg = mock_dirs.modcfg;
+        mod_cfg.set_all_mods_active(false).unwrap();
+
+        assert!(!mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(!mod_cfg.mods.get("mod2").unwrap().active);
+
+        mod_cfg.set_all_mods_active(true).unwrap();
+
+        assert!(mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(mod_cfg.mods.get("mod2").unwrap().active);
     }
 }
