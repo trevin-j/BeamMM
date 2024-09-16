@@ -161,7 +161,7 @@ impl Preset {
     ///
     /// Possible IO errors if there is an issue deleting the file.
     pub fn delete(name: &str, presets_dir: &Path) -> Result<()> {
-        fs::remove_file(presets_dir.join(name))?;
+        fs::remove_file(presets_dir.join(name).with_extension("json"))?;
         Ok(())
     }
 
@@ -346,5 +346,13 @@ mod tests {
         let mock = MockData::new();
         let result = Preset::load_from_path("missing_preset", &mock.presets_dir);
         assert!(matches!(result, Err(MissingPreset { .. })));
+    }
+
+    #[test]
+    fn deleting_preset() {
+        let mock = MockData::new();
+        Preset::delete("preset1", &mock.presets_dir).unwrap();
+        let presets = Preset::list(&mock.presets_dir).unwrap().collect::<Vec<_>>();
+        assert_eq!(presets, vec!["preset2"]);
     }
 }
