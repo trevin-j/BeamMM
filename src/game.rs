@@ -277,9 +277,10 @@ mod tests {
         // Load the modcfg here instead of just relying on the MockDirs struct so we can test the loading.
         let mod_cfg = ModCfg::load_from_path(&mock_dirs.mods_dir).unwrap();
 
-        assert_eq!(mod_cfg.mods.len(), 2);
+        assert_eq!(mod_cfg.mods.len(), 3);
         assert!(mod_cfg.mods.get("mod1").unwrap().active);
         assert!(!mod_cfg.mods.get("mod2").unwrap().active);
+        assert!(mod_cfg.mods.get("mod3").unwrap().active);
 
         // Check that the other data is preserved.
         assert_eq!(mod_cfg.other.len(), 1);
@@ -333,7 +334,7 @@ mod tests {
 
         let mut mod_cfg = mock_dirs.modcfg;
 
-        let result = mod_cfg.set_mod_active("mod3", true);
+        let result = mod_cfg.set_mod_active("fake_mod", true);
         assert!(matches!(result, Err(MissingMods { .. })));
     }
 
@@ -363,7 +364,7 @@ mod tests {
 
         let mut mod_cfg = mock_dirs.modcfg;
 
-        let result = mod_cfg.set_mods_active(&["mod1".into(), "mod3".into()], true);
+        let result = mod_cfg.set_mods_active(&["mod1".into(), "fake_mod".into()], true);
         assert!(matches!(result, Err(MissingMods { .. })));
 
         // Check that no mods were set active.
@@ -385,5 +386,17 @@ mod tests {
 
         assert!(mod_cfg.mods.get("mod1").unwrap().active);
         assert!(mod_cfg.mods.get("mod2").unwrap().active);
+    }
+
+    #[test]
+    fn is_mod_active() {
+        let mock_dirs = MockData::new();
+
+        let mod_cfg = mock_dirs.modcfg;
+
+        assert!(mod_cfg.is_mod_active("mod1").unwrap());
+        assert!(!mod_cfg.is_mod_active("mod2").unwrap());
+        assert!(mod_cfg.is_mod_active("mod3").unwrap());
+        assert!(mod_cfg.is_mod_active("fake_mod").is_none());
     }
 }

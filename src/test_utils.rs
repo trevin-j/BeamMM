@@ -60,6 +60,12 @@ impl MockData {
                     "other": {
                         "key": "value"
                     }
+                },
+                "mod3": {
+                    "active": true,
+                    "other": {
+                        "key": "value"
+                    }
                 }
             },
             "other": {
