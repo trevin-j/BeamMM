@@ -107,7 +107,7 @@ impl Preset {
     ///
     /// Possible IO errors if there is an issue creating the file or writing to it.
     pub fn save_to_path(&self, presets_dir: &Path) -> Result<()> {
-        let file = File::create(presets_dir.join(&self.name))?;
+        let file = File::create(presets_dir.join(&self.name).with_extension("json"))?;
         let writer = BufWriter::new(file);
         self.save(writer)
     }
@@ -137,7 +137,7 @@ impl Preset {
     /// Possible IO errors if there is an issue reading the file or serde_json errors if there is
     /// an issue deserializing the preset.
     pub fn load_from_path(name: &str, presets_dir: &Path) -> Result<Self> {
-        let preset_path = presets_dir.join(name);
+        let preset_path = presets_dir.join(name).with_extension("json");
         if preset_path.try_exists()? {
             let file = File::open(preset_path)?;
             let reader = BufReader::new(file);
@@ -336,6 +336,9 @@ mod tests {
         let mods = vec!["mod1".into(), "mod2".into()];
         let preset = Preset::new("preset3".into(), mods);
         preset.save_to_path(&mock.presets_dir).unwrap();
+
+        // Check that there is now a `preset3.json` file in the presets directory.
+        assert!(mock.presets_dir.join("preset3.json").exists());
 
         let loaded_preset = Preset::load_from_path("preset3", &mock.presets_dir).unwrap();
         assert_eq!(loaded_preset, preset);
