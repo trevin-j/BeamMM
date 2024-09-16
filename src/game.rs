@@ -238,6 +238,20 @@ impl ModCfg {
         let mods: Vec<String> = self.get_mods().cloned().collect();
         self.set_mods_active(&mods, active)
     }
+
+    /// Get the active status of a mod.
+    ///
+    /// # Arguments
+    ///
+    /// `mod_name`: The name of the mod to check the active status of.
+    ///
+    /// # Returns
+    ///
+    /// `Some(bool)`: The active status of the mod if it exists.
+    /// `None`: If the mod doesn't exist in the ModCfg.
+    pub fn is_mod_active(&self, mod_name: &str) -> Option<bool> {
+        self.mods.get(mod_name).map(|m| m.active)
+    }
 }
 
 /// A struct representing a BeamNG.drive mod.
