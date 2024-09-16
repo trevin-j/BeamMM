@@ -249,6 +249,7 @@ struct Mod {
     #[serde(flatten)]
     other: HashMap<String, serde_json::Value>,
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -341,5 +342,19 @@ mod tests {
 
         let result = ModCfg::load_from_path(&temp_dir.join("bad_path"));
         assert!(matches!(result, Err(DirNotFound { .. })));
+    }
+
+    #[test]
+    fn save_modcfg() {
+        let mock_dirs = MockDirs::new();
+
+        let mut mod_cfg = mock_dirs.modcfg;
+        mod_cfg.mods.get_mut("mod1").unwrap().active = false;
+
+        mod_cfg.save_to_path(&mock_dirs.mods_dir).unwrap();
+
+        let mod_cfg = ModCfg::load_from_path(&mock_dirs.mods_dir).unwrap();
+
+        assert!(!mod_cfg.mods.get("mod1").unwrap().active);
     }
 }
