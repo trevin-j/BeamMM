@@ -46,6 +46,7 @@ pub fn beamng_dir(possible_dirs: impl Iterator<Item = PathBuf>) -> Result<PathBu
 /// # Errors
 ///
 /// * `GameDirNotFound`: When the game's data directory cannot be found automatically.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn beamng_dir_default() -> Result<PathBuf> {
     let possible_dirs = vec![dirs::data_local_dir(), dirs::data_dir()]
         .into_iter()
@@ -103,6 +104,7 @@ pub fn mods_dir(data_dir: &Path, version: &str) -> Result<PathBuf> {
 /// * `MissingLocalAppdata` if there is a problem retrieving the `%LocalAppData%` Windows variable
 /// * `std::io::Error` if there is a permissions issue when checking if the dir exists or if there is
 ///     an issue creating the dir
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn beammm_dir() -> Result<PathBuf> {
     let dir = dirs::data_local_dir()
         .ok_or(MissingLocalAppdata)?
@@ -132,6 +134,7 @@ pub fn beammm_dir() -> Result<PathBuf> {
 /// # let beammm_dir = temp_dir.path();
 /// let presets_dir = presets_dir(&beammm_dir).unwrap();
 /// ```
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn presets_dir(beammm_dir: &Path) -> Result<PathBuf> {
     let dir = beammm_dir.join("presets");
     validate_dir(dir)

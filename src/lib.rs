@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 use std::{
     collections::HashSet,
     fs::{self},
@@ -193,6 +195,7 @@ pub fn confirm<R: BufRead, W: Write>(
 /// # Errors
 ///
 /// IO errors are possible from read and write operations.
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn confirm_cli(msg: &str, default: bool, confirm_all: bool) -> Result<bool> {
     confirm(io::stdin().lock(), io::stdout(), msg, default, confirm_all)
 }
