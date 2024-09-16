@@ -11,6 +11,9 @@ pub mod game;
 pub mod path;
 mod preset;
 
+#[cfg(test)]
+mod test_utils;
+
 pub use preset::Preset;
 
 /// Result type alias for this crate.

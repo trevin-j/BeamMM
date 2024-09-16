@@ -254,71 +254,11 @@ struct Mod {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
-
-    /// Struct to handle mock dirs for testing.
-    /// Automatically cleans up the directories when dropped.
-    /// _temp fields are the TempDir structs which need to be preserved so the directories are not
-    /// deleted before the tests are run.
-    struct MockDirs {
-        _mods_dir_temp: tempfile::TempDir,
-        mods_dir: PathBuf,
-        _presets_dir_temp: tempfile::TempDir,
-        presets_dir: PathBuf,
-        modcfg: ModCfg,
-    }
-
-    impl MockDirs {
-        /// Initialize MockDirs with temporary directories.
-        /// Creates a db.json file in the mods directory.
-        fn new() -> Self {
-            let _mods_dir_temp = tempdir().unwrap();
-            let mods_dir = _mods_dir_temp.path().to_path_buf();
-            let _presets_dir_temp = tempdir().unwrap();
-            let presets_dir = _presets_dir_temp.path().to_path_buf();
-
-            create_db_json(&mods_dir);
-
-            let modcfg = ModCfg::load_from_path(&mods_dir).unwrap();
-
-            Self {
-                _mods_dir_temp,
-                mods_dir,
-                _presets_dir_temp,
-                presets_dir,
-                modcfg,
-            }
-        }
-    }
-
-    fn create_db_json(dir: &Path) {
-        // NOTE: Changing this JSON could break tests.
-        let db_json = r#"{
-            "mods": {
-                "mod1": {
-                    "active": true,
-                    "other": {
-                        "key": "value"
-                    }
-                },
-                "mod2": {
-                    "active": false,
-                    "other": {
-                        "key": "value"
-                    }
-                }
-            },
-            "other": {
-                "key": "value"
-            }
-        }"#;
-
-        std::fs::write(dir.join("db.json"), db_json).unwrap();
-    }
+    use crate::test_utils::MockData;
 
     #[test]
     fn loading_modcfg() {
-        let mock_dirs = MockDirs::new();
+        let mock_dirs = MockData::new();
 
         // Load the modcfg here instead of just relying on the MockDirs struct so we can test the loading.
         let mod_cfg = ModCfg::load_from_path(&mock_dirs.mods_dir).unwrap();
@@ -347,7 +287,7 @@ mod tests {
 
     #[test]
     fn save_modcfg() {
-        let mock_dirs = MockDirs::new();
+        let mock_dirs = MockData::new();
 
         let mut mod_cfg = mock_dirs.modcfg;
         mod_cfg.mods.get_mut("mod1").unwrap().active = false;
@@ -361,7 +301,7 @@ mod tests {
 
     #[test]
     fn set_mod_active() {
-        let mock_dirs = MockDirs::new();
+        let mock_dirs = MockData::new();
 
         let mut mod_cfg = mock_dirs.modcfg;
         mod_cfg.set_mod_active("mod1", false).unwrap();
@@ -375,7 +315,7 @@ mod tests {
 
     #[test]
     fn set_mod_active_missing() {
-        let mock_dirs = MockDirs::new();
+        let mock_dirs = MockData::new();
 
         let mut mod_cfg = mock_dirs.modcfg;
 
@@ -385,7 +325,7 @@ mod tests {
 
     #[test]
     fn set_mods_active() {
-        let mock_dirs = MockDirs::new();
+        let mock_dirs = MockData::new();
 
         let mut mod_cfg = mock_dirs.modcfg;
         mod_cfg
@@ -405,7 +345,7 @@ mod tests {
 
     #[test]
     fn set_mods_active_missing() {
-        let mock_dirs = MockDirs::new();
+        let mock_dirs = MockData::new();
 
         let mut mod_cfg = mock_dirs.modcfg;
 
@@ -419,7 +359,7 @@ mod tests {
 
     #[test]
     fn set_all_mods_active() {
-        let mock_dirs = MockDirs::new();
+        let mock_dirs = MockData::new();
 
         let mut mod_cfg = mock_dirs.modcfg;
         mod_cfg.set_all_mods_active(false).unwrap();
