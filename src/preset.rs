@@ -364,4 +364,18 @@ mod tests {
 
         assert_eq!(preset.get_mods(), &["mod1", "mod2", "mod3", "mod4"]);
     }
+
+    #[test]
+    fn removing_mods() {
+        let mut preset = Preset::new(
+            "preset5".into(),
+            vec!["mod1".into(), "mod2".into(), "mod3".into()],
+        );
+        preset.remove_mod("mod2");
+        // Also remove mod that isn't already in the preset to verify we don't get an error of
+        // sorts.
+        preset.remove_mods(&["mod1".into(), "mod4".into()]);
+
+        assert_eq!(preset.get_mods(), &["mod3"]);
+    }
 }
