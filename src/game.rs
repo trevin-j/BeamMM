@@ -357,4 +357,62 @@ mod tests {
 
         assert!(!mod_cfg.mods.get("mod1").unwrap().active);
     }
+
+    #[test]
+    fn set_mod_active() {
+        let mock_dirs = MockDirs::new();
+
+        let mut mod_cfg = mock_dirs.modcfg;
+        mod_cfg.set_mod_active("mod1", false).unwrap();
+
+        assert!(!mod_cfg.mods.get("mod1").unwrap().active);
+
+        mod_cfg.set_mod_active("mod1", true).unwrap();
+
+        assert!(mod_cfg.mods.get("mod1").unwrap().active);
+    }
+
+    #[test]
+    fn set_mod_active_missing() {
+        let mock_dirs = MockDirs::new();
+
+        let mut mod_cfg = mock_dirs.modcfg;
+
+        let result = mod_cfg.set_mod_active("mod3", true);
+        assert!(matches!(result, Err(MissingMods { .. })));
+    }
+
+    #[test]
+    fn set_mods_active() {
+        let mock_dirs = MockDirs::new();
+
+        let mut mod_cfg = mock_dirs.modcfg;
+        mod_cfg
+            .set_mods_active(&["mod1".into(), "mod2".into()], false)
+            .unwrap();
+
+        assert!(!mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(!mod_cfg.mods.get("mod2").unwrap().active);
+
+        mod_cfg
+            .set_mods_active(&["mod1".into(), "mod2".into()], true)
+            .unwrap();
+
+        assert!(mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(mod_cfg.mods.get("mod2").unwrap().active);
+    }
+
+    #[test]
+    fn set_mods_active_missing() {
+        let mock_dirs = MockDirs::new();
+
+        let mut mod_cfg = mock_dirs.modcfg;
+
+        let result = mod_cfg.set_mods_active(&["mod1".into(), "mod3".into()], true);
+        assert!(matches!(result, Err(MissingMods { .. })));
+
+        // Check that no mods were set active.
+        assert!(mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(!mod_cfg.mods.get("mod2").unwrap().active);
+    }
 }
