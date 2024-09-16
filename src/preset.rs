@@ -340,4 +340,11 @@ mod tests {
         let loaded_preset = Preset::load_from_path("preset3", &mock.presets_dir).unwrap();
         assert_eq!(loaded_preset, preset);
     }
+
+    #[test]
+    fn load_missing_preset() {
+        let mock = MockData::new();
+        let result = Preset::load_from_path("missing_preset", &mock.presets_dir);
+        assert!(matches!(result, Err(MissingPreset { .. })));
+    }
 }
