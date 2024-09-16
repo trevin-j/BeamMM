@@ -355,4 +355,13 @@ mod tests {
         let presets = Preset::list(&mock.presets_dir).unwrap().collect::<Vec<_>>();
         assert_eq!(presets, vec!["preset2"]);
     }
+
+    #[test]
+    fn adding_mods() {
+        let mut preset = Preset::new("preset4".into(), vec!["mod1".into()]);
+        preset.add_mod("mod2");
+        preset.add_mods(&["mod3".into(), "mod4".into()]);
+
+        assert_eq!(preset.get_mods(), &["mod1", "mod2", "mod3", "mod4"]);
+    }
 }
