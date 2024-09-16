@@ -32,7 +32,7 @@ use std::{
 /// ```
 ///
 /// See additional preset examples in each function's documentation.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Preset {
     /// The name of the preset.
     name: String,
@@ -328,5 +328,16 @@ mod tests {
         let preset = Preset::new("preset3".into(), mods.clone());
 
         assert_eq!(preset.get_mods(), &mods);
+    }
+
+    #[test]
+    fn saving_and_loading_preset() {
+        let mock = MockData::new();
+        let mods = vec!["mod1".into(), "mod2".into()];
+        let preset = Preset::new("preset3".into(), mods);
+        preset.save_to_path(&mock.presets_dir).unwrap();
+
+        let loaded_preset = Preset::load_from_path("preset3", &mock.presets_dir).unwrap();
+        assert_eq!(loaded_preset, preset);
     }
 }
