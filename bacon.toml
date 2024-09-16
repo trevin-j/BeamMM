@@ -64,7 +64,7 @@ need_stdout = true
 [jobs.coverage-open]
 command = [
     "cargo", "llvm-cov", "nextest", "--color", "always",
-    "--open"
+    "--open", "--ignore-filename-regex", "main.rs",
 ]
 need_stdout = false
 on_success = "back"
@@ -72,13 +72,14 @@ on_success = "back"
 [jobs.coverage]
 command = [
     "cargo", "llvm-cov", "nextest", "--color", "always",
+     "--ignore-filename-regex", "main.rs",
 ]
 need_stdout = true
 
 [jobs.coverage-html]
 command = [
     "cargo", "llvm-cov", "nextest", "--color", "always",
-    "--html"
+    "--html",  "--ignore-filename-regex", "main.rs",
 ]
 need_stdout = false
 on_success = "back"
