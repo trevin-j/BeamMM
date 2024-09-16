@@ -22,6 +22,7 @@ pub struct ModCfg {
 
 impl ModCfg {
     /// The filename of the mod configuration file.
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn filename() -> PathBuf {
         PathBuf::from("db.json")
     }
@@ -247,4 +248,98 @@ struct Mod {
     /// Other currently unimportant data.
     #[serde(flatten)]
     other: HashMap<String, serde_json::Value>,
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    /// Struct to handle mock dirs for testing.
+    /// Automatically cleans up the directories when dropped.
+    /// _temp fields are the TempDir structs which need to be preserved so the directories are not
+    /// deleted before the tests are run.
+    struct MockDirs {
+        _mods_dir_temp: tempfile::TempDir,
+        mods_dir: PathBuf,
+        _presets_dir_temp: tempfile::TempDir,
+        presets_dir: PathBuf,
+        modcfg: ModCfg,
+    }
+
+    impl MockDirs {
+        /// Initialize MockDirs with temporary directories.
+        /// Creates a db.json file in the mods directory.
+        fn new() -> Self {
+            let _mods_dir_temp = tempdir().unwrap();
+            let mods_dir = _mods_dir_temp.path().to_path_buf();
+            let _presets_dir_temp = tempdir().unwrap();
+            let presets_dir = _presets_dir_temp.path().to_path_buf();
+
+            create_db_json(&mods_dir);
+
+            let modcfg = ModCfg::load_from_path(&mods_dir).unwrap();
+
+            Self {
+                _mods_dir_temp,
+                mods_dir,
+                _presets_dir_temp,
+                presets_dir,
+                modcfg,
+            }
+        }
+    }
+
+    fn create_db_json(dir: &Path) {
+        // NOTE: Changing this JSON could break tests.
+        let db_json = r#"{
+            "mods": {
+                "mod1": {
+                    "active": true,
+                    "other": {
+                        "key": "value"
+                    }
+                },
+                "mod2": {
+                    "active": false,
+                    "other": {
+                        "key": "value"
+                    }
+                }
+            },
+            "other": {
+                "key": "value"
+            }
+        }"#;
+
+        std::fs::write(dir.join("db.json"), db_json).unwrap();
+    }
+
+    #[test]
+    fn loading_modcfg() {
+        let mock_dirs = MockDirs::new();
+
+        // Load the modcfg here instead of just relying on the MockDirs struct so we can test the loading.
+        let mod_cfg = ModCfg::load_from_path(&mock_dirs.mods_dir).unwrap();
+
+        assert_eq!(mod_cfg.mods.len(), 2);
+        assert!(mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(!mod_cfg.mods.get("mod2").unwrap().active);
+
+        // Check that the other data is preserved.
+        assert_eq!(mod_cfg.other.len(), 1);
+        let other_data = mod_cfg.other.get("other").unwrap();
+        assert_eq!(
+            other_data.get("key").unwrap(),
+            &serde_json::Value::String("value".into())
+        );
+    }
+
+    #[test]
+    fn load_bad_path() {
+        let tmp = tempfile::tempdir().unwrap();
+        let temp_dir = tmp.path();
+
+        let result = ModCfg::load_from_path(&temp_dir.join("bad_path"));
+        assert!(matches!(result, Err(DirNotFound { .. })));
+    }
 }
