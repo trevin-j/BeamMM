@@ -399,4 +399,70 @@ mod tests {
         assert!(mod_cfg.is_mod_active("mod3").unwrap());
         assert!(mod_cfg.is_mod_active("fake_mod").is_none());
     }
+
+    #[test]
+    fn apply_presets() {
+        let mock_data = MockData::new();
+
+        let mut preset1 = mock_data.preset1;
+        let mut preset2 = mock_data.preset2;
+
+        let mut mod_cfg = mock_data.modcfg;
+
+        // Enable both presets and make sure both mods are enabled.
+
+        preset1.enable();
+        preset2.enable();
+
+        preset1.save_to_path(&mock_data.presets_dir).unwrap();
+        preset2.save_to_path(&mock_data.presets_dir).unwrap();
+
+        mod_cfg.apply_presets(&mock_data.presets_dir).unwrap();
+
+        assert!(mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(mod_cfg.mods.get("mod2").unwrap().active);
+
+        // Disable just preset 2, which has both mod1 and mod2. Before applying preset, both mods
+        // should be disabled. But, since preset 1 is still enabled, after applying preset, mod1
+        // should be enabled.
+
+        preset2.disable(&mut mod_cfg).unwrap();
+
+        preset2.save_to_path(&mock_data.presets_dir).unwrap();
+
+        assert!(!mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(!mod_cfg.mods.get("mod2").unwrap().active);
+
+        mod_cfg.apply_presets(&mock_data.presets_dir).unwrap();
+
+        assert!(mod_cfg.mods.get("mod1").unwrap().active);
+        assert!(!mod_cfg.mods.get("mod2").unwrap().active);
+    }
+
+    #[test]
+    fn apply_presets_missing_mods() {
+        let mock_data = MockData::new();
+
+        let mut preset1 = mock_data.preset1;
+        let mut preset2 = mock_data.preset2;
+
+        let mut mod_cfg = mock_data.modcfg;
+
+        // Enable both presets and make sure both mods are enabled.
+
+        preset1.enable();
+        preset2.enable();
+
+        preset1.save_to_path(&mock_data.presets_dir).unwrap();
+        preset2.save_to_path(&mock_data.presets_dir).unwrap();
+
+        // Remove mod2 from the modcfg so that preset2 will fail to enable.
+        mod_cfg.mods.remove("mod2");
+
+        let result = mod_cfg.apply_presets(&mock_data.presets_dir);
+        assert!(matches!(result, Err(PresetsFailed { .. })));
+
+        // Check that mod1 is still enabled.
+        assert!(mod_cfg.mods.get("mod1").unwrap().active);
+    }
 }
