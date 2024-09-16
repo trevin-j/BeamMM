@@ -184,4 +184,34 @@ mod tests {
             GameDirNotFound
         ));
     }
+
+    #[test]
+    fn test_mods_dir() {
+        let not_exists = PathBuf::from("not_exists");
+        let version = "0.32";
+
+        let tmp = tempfile::tempdir().unwrap();
+        let data_dir = tmp.path();
+
+        let version_dir = data_dir.join(version);
+        fs::create_dir(&version_dir).unwrap();
+
+        // Check that it returns an error when the data_dir doesn't exist.
+        assert!(matches!(
+            mods_dir(&not_exists, version).unwrap_err(),
+            DirNotFound { .. }
+        ));
+
+        // Check that it returns an error when the mods dir doesn't exist.
+        assert!(matches!(
+            mods_dir(data_dir, version).unwrap_err(),
+            DirNotFound { .. }
+        ));
+
+        let mods_dir_path = version_dir.join("mods");
+        fs::create_dir(&mods_dir_path).unwrap();
+
+        // Check that it returns the correct mods dir.
+        assert_eq!(mods_dir(data_dir, version).unwrap(), mods_dir_path);
+    }
 }
