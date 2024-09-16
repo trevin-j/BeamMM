@@ -61,6 +61,28 @@ command = [
 ]
 need_stdout = true
 
+[jobs.coverage-open]
+command = [
+    "cargo", "llvm-cov", "nextest", "--color", "always",
+    "--open"
+]
+need_stdout = false
+on_success = "back"
+
+[jobs.coverage]
+command = [
+    "cargo", "llvm-cov", "nextest", "--color", "always",
+]
+need_stdout = true
+
+[jobs.coverage-html]
+command = [
+    "cargo", "llvm-cov", "nextest", "--color", "always",
+    "--html"
+]
+need_stdout = false
+on_success = "back"
+
 [jobs.doc]
 command = ["cargo", "doc", "--color", "always", "--no-deps"]
 need_stdout = false
@@ -106,3 +128,6 @@ allow_warnings = true
 # alt-m = "job:my-job"
 c = "job:clippy-all" # comment this to have 'c' run clippy on only the default target
 n = "job:nextest"
+alt-c = "job:coverage"
+alt-o = "job:coverage-open"
+alt-h = "job:coverage-html"
