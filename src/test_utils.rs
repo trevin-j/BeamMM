@@ -5,6 +5,9 @@ use tempfile::tempdir;
 /// Automatically cleans up the directories when dropped.
 /// _temp fields are the TempDir structs which need to be preserved so the directories are not
 /// deleted before the tests are run.
+/// Initializing a MockData makes multiple .unwrap() calls, so if tests start breaking as a result
+/// of this, something is wrong with the code here. These calls shouldn't fail as they rely on the
+/// temporary directories created by tempfile.
 pub struct MockData {
     _mods_dir_temp: tempfile::TempDir,
     pub mods_dir: PathBuf,
