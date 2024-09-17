@@ -151,15 +151,17 @@ fn run() -> beam_mm::Result<()> {
             println!("Preset '{}' was not deleted.", preset);
         }
     }
-    if let Some(preset) = args.enable_preset {
-        let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+    if let Some(preset_name) = args.enable_preset {
+        let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
         preset.enable();
         preset.save_to_path(&presets_dir)?;
+        println!("Preset '{}' enabled.", preset_name);
     }
-    if let Some(preset) = args.disable_preset {
-        let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+    if let Some(preset_name) = args.disable_preset {
+        let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
         preset.disable(&mut beamng_mod_cfg)?;
         preset.save_to_path(&presets_dir)?;
+        println!("Preset '{}' disabled.", preset_name);
     }
 
     // Handle operations that require args.mods to exist.
@@ -176,9 +178,14 @@ fn run() -> beam_mm::Result<()> {
                 )?;
                 if confirmation {
                     beamng_mod_cfg.set_all_mods_active(true)?;
+                    println!("All mods enabled.");
                 }
             } else {
                 beamng_mod_cfg.set_mods_active(&mods, true)?;
+                println!("Mods enabled:");
+                for mod_name in mods.iter() {
+                    println!("  - {}", mod_name);
+                }
             }
         }
         if args.disable {
@@ -190,9 +197,14 @@ fn run() -> beam_mm::Result<()> {
                 )?;
                 if confirmation {
                     beamng_mod_cfg.set_all_mods_active(false)?;
+                    println!("All mods disabled.");
                 }
             } else {
                 beamng_mod_cfg.set_mods_active(&mods, false)?;
+                println!("Mods disabled:");
+                for mod_name in mods.iter() {
+                    println!("  - {}", mod_name);
+                }
             }
         }
         if let Some(preset) = args.preset_add {
