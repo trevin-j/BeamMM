@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-/// BeamMM CLI - A mod manager backend and command line application for the game BeamNG.Drive
+/// BeamMM CLI - A mod manager backend and command line application for the game BeamNG.drive
 struct Args {
     /// Create a mod preset
     #[arg(long, value_name = "NAME")]
