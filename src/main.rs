@@ -91,9 +91,24 @@ fn main() -> beam_mm::Result<()> {
             println!("{} {}", status, preset_name);
         }
     }
-    if let Some(preset) = args.create_preset {
-        let preset = beam_mm::Preset::new(preset, args.mods.clone().unwrap_or(vec![]));
+    if let Some(preset_name) = args.create_preset {
+        let preset = beam_mm::Preset::new(preset_name.clone(), args.mods.clone().unwrap_or(vec![]));
         preset.save_to_path(&presets_dir)?;
+        println!("Preset '{}' created successfully.", preset_name);
+        if let Some(_mods) = args.mods.clone() {
+            println!("With mods:");
+            for mod_name in preset.get_mods() {
+                println!("  - {}", mod_name);
+            }
+        } else {
+            println!("No mods added to the preset.");
+        }
+        println!(
+            "Use the --enable-preset and --disable-preset flags to enable or disable the preset."
+        );
+        println!(
+            "Use the --preset-add and --preset-remove flags to add or remove mods from the preset."
+        );
     }
     if let Some(preset) = args.delete_preset {
         let confirmation = beam_mm::confirm_cli(
