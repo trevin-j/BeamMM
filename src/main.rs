@@ -57,6 +57,10 @@ struct Args {
     /// List installed mods
     #[arg(long)]
     list_mods: bool,
+
+    /// List preset mods
+    #[arg(long)]
+    list_preset_mods: Option<String>,
 }
 
 fn main() {
@@ -88,6 +92,19 @@ fn run() -> beam_mm::Result<()> {
     let presets_dir = presets_dir(&beammm_dir)?;
 
     let mut beamng_mod_cfg = beam_mm::game::ModCfg::load_from_path(&mods_dir)?;
+
+    if let Some(preset_name) = args.list_preset_mods {
+        let preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+        let status = if preset.is_enabled() {
+            "enabled ".green()
+        } else {
+            "disabled".red()
+        };
+        println!("Mods in preset '{}' ({}):", preset_name, status);
+        for mod_name in preset.get_mods() {
+            println!("{}", mod_name);
+        }
+    }
 
     if args.list_presets {
         for preset_name in beam_mm::Preset::list(&presets_dir)? {
