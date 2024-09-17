@@ -133,7 +133,22 @@ fn run() -> beam_mm::Result<()> {
             args.confirm_all,
         )?;
         if confirmation {
-            beam_mm::Preset::delete(&preset, &presets_dir)?;
+            match beam_mm::Preset::delete(&preset, &presets_dir) {
+                Ok(_) => (),
+                Err(beam_mm::Error::IO(e)) => match e.kind() {
+                    std::io::ErrorKind::NotFound => {
+                        println!("Preset '{}' does not exist.", preset);
+                        return Ok(());
+                    }
+                    _ => return Err(beam_mm::Error::IO(e)),
+                },
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+            println!("Preset '{}' deleted successfully.", preset);
+        } else {
+            println!("Preset '{}' was not deleted.", preset);
         }
     }
     if let Some(preset) = args.enable_preset {
