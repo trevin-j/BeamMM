@@ -64,6 +64,13 @@ pub enum Error {
         mods: HashSet<String>,
         presets: HashSet<String>,
     },
+    /// When a preset already exists.
+    ///
+    /// # Fields
+    ///
+    /// * `preset`: The name of the preset that already exists.
+    #[error("Preset {preset} already exists.")]
+    PresetExists { preset: String },
 
     /// std::io errors.
     #[error("There was an IO error. {0}")]

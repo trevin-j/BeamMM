@@ -308,6 +308,17 @@ impl Preset {
     pub fn get_mods(&self) -> &Vec<String> {
         &self.mods
     }
+
+    /// Check if a preset already exists.
+    ///
+    /// # Arguments
+    ///
+    /// `name`: The name of the preset to check for.
+    /// `presets_dir`: The directory where the presets are stored.
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    pub fn exists(name: &str, presets_dir: &Path) -> bool {
+        presets_dir.join(name).with_extension("json").exists()
+    }
 }
 
 #[cfg(test)]

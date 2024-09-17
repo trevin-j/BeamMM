@@ -92,6 +92,13 @@ fn main() -> beam_mm::Result<()> {
         }
     }
     if let Some(preset_name) = args.create_preset {
+        // Check if the preset already exists
+        if beam_mm::Preset::exists(&preset_name, &presets_dir) {
+            return Err(beam_mm::Error::PresetExists {
+                preset: preset_name,
+            });
+        }
+
         let preset = beam_mm::Preset::new(preset_name.clone(), args.mods.clone().unwrap_or(vec![]));
         preset.save_to_path(&presets_dir)?;
         println!("Preset '{}' created successfully.", preset_name);
