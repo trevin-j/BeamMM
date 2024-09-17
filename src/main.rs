@@ -59,7 +59,16 @@ struct Args {
     list_mods: bool,
 }
 
-fn main() -> beam_mm::Result<()> {
+fn main() {
+    // Run the main function and call display on errors to get their pretty messages rather than
+    // the debug output.
+    if let Err(e) = run() {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
+}
+
+fn run() -> beam_mm::Result<()> {
     let args = Args::parse();
 
     let beamng_dir = if let Some(dir) = args.custom_data_dir {
