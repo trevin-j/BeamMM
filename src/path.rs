@@ -59,7 +59,7 @@ pub fn beamng_dir_default() -> Result<PathBuf> {
 /// # Arguments
 ///
 /// `data_dir`: The base game data directory. Usually `%LocalAppData%/BeamNG.drive`
-/// `version`: The current game version. Can be retrieved via `beam_mm::game_version(data_dir)`.
+/// `version`: The current game version. Can be retrieved via `beammm::game_version(data_dir)`.
 ///
 /// # Errors
 ///
@@ -70,7 +70,7 @@ pub fn beamng_dir_default() -> Result<PathBuf> {
 /// # Examples
 ///
 /// ```rust
-/// use beam_mm::path::mods_dir;
+/// use beammm::path::mods_dir;
 /// # use tempfile::tempdir;
 ///
 /// # let temp_dir = tempdir().unwrap();
@@ -127,7 +127,7 @@ pub fn beammm_dir() -> Result<PathBuf> {
 /// # Examples
 ///
 /// ```rust
-/// use beam_mm::path::presets_dir;
+/// use beammm::path::presets_dir;
 /// # use tempfile::tempdir;
 ///
 /// # let temp_dir = tempdir().unwrap();

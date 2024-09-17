@@ -1,4 +1,4 @@
-use beam_mm::path::*;
+use beammm::path::*;
 use clap::Parser;
 use colored::Colorize;
 use std::path::PathBuf;
@@ -72,29 +72,29 @@ fn main() {
     }
 }
 
-fn run() -> beam_mm::Result<()> {
+fn run() -> beammm::Result<()> {
     let args = Args::parse();
 
     let beamng_dir = if let Some(dir) = args.custom_data_dir {
         if dir.try_exists()? {
             dir
         } else {
-            return Err(beam_mm::Error::DirNotFound { dir });
+            return Err(beammm::Error::DirNotFound { dir });
         }
     } else {
         beamng_dir_default()?
     };
 
-    let beamng_version = beam_mm::game_version(&beamng_dir)?;
+    let beamng_version = beammm::game_version(&beamng_dir)?;
     let mods_dir = mods_dir(&beamng_dir, &beamng_version)?;
     let beammm_dir = beammm_dir()?;
 
     let presets_dir = presets_dir(&beammm_dir)?;
 
-    let mut beamng_mod_cfg = beam_mm::game::ModCfg::load_from_path(&mods_dir)?;
+    let mut beamng_mod_cfg = beammm::game::ModCfg::load_from_path(&mods_dir)?;
 
     if let Some(preset_name) = args.list_preset_mods {
-        let preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+        let preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
         let status = if preset.is_enabled() {
             "enabled ".green()
         } else {
@@ -107,8 +107,8 @@ fn run() -> beam_mm::Result<()> {
     }
 
     if args.list_presets {
-        for preset_name in beam_mm::Preset::list(&presets_dir)? {
-            let preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+        for preset_name in beammm::Preset::list(&presets_dir)? {
+            let preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
             let status = if preset.is_enabled() {
                 "enabled ".green()
             } else {
@@ -119,13 +119,13 @@ fn run() -> beam_mm::Result<()> {
     }
     if let Some(preset_name) = args.create_preset {
         // Check if the preset already exists
-        if beam_mm::Preset::exists(&preset_name, &presets_dir) {
-            return Err(beam_mm::Error::PresetExists {
+        if beammm::Preset::exists(&preset_name, &presets_dir) {
+            return Err(beammm::Error::PresetExists {
                 preset: preset_name,
             });
         }
 
-        let preset = beam_mm::Preset::new(preset_name.clone(), args.mods.clone().unwrap_or(vec![]));
+        let preset = beammm::Preset::new(preset_name.clone(), args.mods.clone().unwrap_or(vec![]));
         preset.save_to_path(&presets_dir)?;
         println!("Preset '{}' created successfully.", preset_name);
         if let Some(_mods) = args.mods.clone() {
@@ -144,20 +144,20 @@ fn run() -> beam_mm::Result<()> {
         );
     }
     if let Some(preset) = args.delete_preset {
-        let confirmation = beam_mm::confirm_cli(
+        let confirmation = beammm::confirm_cli(
             &format!("Are you sure you want to delete preset '{}'?", preset),
             false,
             args.confirm_all,
         )?;
         if confirmation {
-            match beam_mm::Preset::delete(&preset, &presets_dir) {
+            match beammm::Preset::delete(&preset, &presets_dir) {
                 Ok(_) => (),
-                Err(beam_mm::Error::IO(e)) => match e.kind() {
+                Err(beammm::Error::IO(e)) => match e.kind() {
                     std::io::ErrorKind::NotFound => {
                         println!("Preset '{}' does not exist.", preset);
                         return Ok(());
                     }
-                    _ => return Err(beam_mm::Error::IO(e)),
+                    _ => return Err(beammm::Error::IO(e)),
                 },
                 Err(e) => {
                     return Err(e);
@@ -170,21 +170,21 @@ fn run() -> beam_mm::Result<()> {
     }
     if let Some(preset_name) = args.enable_preset {
         if preset_name == "all" {
-            let confirmation = beam_mm::confirm_cli(
+            let confirmation = beammm::confirm_cli(
                 "Are you sure you would like to enable all presets?",
                 true,
                 args.confirm_all,
             )?;
             if confirmation {
-                for preset_name in beam_mm::Preset::list(&presets_dir)? {
-                    let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+                for preset_name in beammm::Preset::list(&presets_dir)? {
+                    let mut preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
                     preset.enable();
                     preset.save_to_path(&presets_dir)?;
                     println!("Preset '{}' enabled.", preset_name);
                 }
             }
         } else {
-            let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+            let mut preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
             preset.enable();
             preset.save_to_path(&presets_dir)?;
             println!("Preset '{}' enabled.", preset_name);
@@ -192,26 +192,26 @@ fn run() -> beam_mm::Result<()> {
     }
     if let Some(preset_name) = args.disable_preset {
         if preset_name == "all" {
-            let confirmation = beam_mm::confirm_cli(
+            let confirmation = beammm::confirm_cli(
                 "Are you sure you would like to disable all presets?",
                 false,
                 args.confirm_all,
             )?;
             if confirmation {
-                for preset_name in beam_mm::Preset::list(&presets_dir)? {
-                    let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+                for preset_name in beammm::Preset::list(&presets_dir)? {
+                    let mut preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
                     preset.disable(&mut beamng_mod_cfg)?;
                     preset.save_to_path(&presets_dir)?;
                     println!("Preset '{}' disabled.", preset_name);
                 }
             }
         } else {
-            let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+            let mut preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
             preset.disable(&mut beamng_mod_cfg)?;
             preset.save_to_path(&presets_dir)?;
             println!("Preset '{}' disabled.", preset_name);
         }
-        // let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+        // let mut preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
         // preset.disable(&mut beamng_mod_cfg)?;
         // preset.save_to_path(&presets_dir)?;
         // println!("Preset '{}' disabled.", preset_name);
@@ -224,7 +224,7 @@ fn run() -> beam_mm::Result<()> {
 
         if args.enable {
             if all_mods {
-                let confirmation = beam_mm::confirm_cli(
+                let confirmation = beammm::confirm_cli(
                     "Are you sure you would like to enable all mods?",
                     true,
                     args.confirm_all,
@@ -243,7 +243,7 @@ fn run() -> beam_mm::Result<()> {
         }
         if args.disable {
             if all_mods {
-                let confirmation = beam_mm::confirm_cli(
+                let confirmation = beammm::confirm_cli(
                     "Are you sure you would like to disable all mods?",
                     false,
                     args.confirm_all,
@@ -261,13 +261,13 @@ fn run() -> beam_mm::Result<()> {
             }
         }
         if let Some(preset_name) = args.preset_add {
-            let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+            let mut preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
             preset.add_mods(&mods);
             preset.save_to_path(&presets_dir)?;
             println!("Mods added to preset '{}':", preset_name);
         }
         if let Some(preset_name) = args.preset_remove {
-            let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+            let mut preset = beammm::Preset::load_from_path(&preset_name, &presets_dir)?;
             preset.remove_mods(&mods);
             preset.save_to_path(&presets_dir)?;
             println!("Mods removed from preset '{}':", preset_name);
@@ -293,7 +293,7 @@ fn run() -> beam_mm::Result<()> {
 
     match beamng_mod_cfg.apply_presets(&presets_dir) {
         Ok(_) => (),
-        Err(beam_mm::Error::PresetsFailed { mods, presets }) => {
+        Err(beammm::Error::PresetsFailed { mods, presets }) => {
             eprintln!("{}", "Failed to apply presets:".red());
             for preset in presets.iter() {
                 eprintln!("  - {}", preset);
@@ -304,7 +304,7 @@ fn run() -> beam_mm::Result<()> {
             }
             eprintln!("{}", "Disabling these presets.".red());
             for preset in presets.iter() {
-                let mut preset = beam_mm::Preset::load_from_path(preset, &presets_dir)?;
+                let mut preset = beammm::Preset::load_from_path(preset, &presets_dir)?;
                 preset.force_disable(&mut beamng_mod_cfg);
                 preset.save_to_path(&presets_dir)?;
             }

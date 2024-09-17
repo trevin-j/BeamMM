@@ -82,7 +82,7 @@ impl ModCfg {
     ///
     /// # Examples
     /// ```rust
-    /// use beam_mm::{Preset, game::ModCfg};
+    /// use beammm::{Preset, game::ModCfg};
     /// # use tempfile::tempdir;
     ///
     /// # // Set up temp mock directories

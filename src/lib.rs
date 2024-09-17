@@ -88,7 +88,7 @@ use Error::*;
 /// # Arguments
 ///
 /// * `data_dir`: The game's data directory. Usually `%LocalAppData%/BeamNG.Drive`. Can be found
-///     using `beam_mm::beamng_dir(dir)`
+///     using `beammm::beamng_dir(dir)`
 ///
 /// # Errors
 ///
@@ -104,7 +104,7 @@ use Error::*;
 /// # Examples
 ///
 /// ```rust
-/// use beam_mm::game_version;
+/// use beammm::game_version;
 /// # use tempfile::tempdir;
 ///
 /// # let temp_dir = tempdir().unwrap();

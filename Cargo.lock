@@ -52,7 +52,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "beam_mm"
+name = "beammm"
 version = "0.1.0"
 dependencies = [
  "clap",

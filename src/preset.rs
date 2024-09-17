@@ -14,7 +14,7 @@ use std::{
 ///
 /// # Examples
 /// ```rust
-/// use beam_mm::Preset;
+/// use beammm::Preset;
 /// # use tempfile::tempdir;
 ///
 /// # let temp_dir = tempdir().unwrap();
@@ -224,7 +224,7 @@ impl Preset {
     /// # Examples
     ///
     /// ```rust
-    /// use beam_mm::{Preset, game::ModCfg};
+    /// use beammm::{Preset, game::ModCfg};
     /// # use tempfile::tempdir;
     ///
     /// # // Set up temp mock directories
@@ -273,7 +273,7 @@ impl Preset {
     /// # Examples
     ///
     /// ```rust
-    /// use beam_mm::{Preset, game::ModCfg};
+    /// use beammm::{Preset, game::ModCfg};
     /// # use tempfile::tempdir;
     ///
     /// # // Set up temp mock directories
