@@ -440,4 +440,18 @@ mod tests {
         assert!(!preset.is_enabled());
         assert!(!mod_cfg.is_mod_active("mod1").unwrap());
     }
+
+    #[test]
+    fn force_disabling_preset() {
+        let mock = MockData::new();
+        let mut mod_cfg = mock.modcfg;
+        let mut preset = mock.preset1;
+
+        preset.add_mod("FakeMod");
+
+        preset.force_disable(&mut mod_cfg);
+
+        assert!(!preset.is_enabled());
+        assert!(!mod_cfg.is_mod_active("mod1").unwrap());
+    }
 }
