@@ -152,16 +152,52 @@ fn run() -> beam_mm::Result<()> {
         }
     }
     if let Some(preset_name) = args.enable_preset {
-        let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
-        preset.enable();
-        preset.save_to_path(&presets_dir)?;
-        println!("Preset '{}' enabled.", preset_name);
+        if preset_name == "all" {
+            let confirmation = beam_mm::confirm_cli(
+                "Are you sure you would like to enable all presets?",
+                true,
+                args.confirm_all,
+            )?;
+            if confirmation {
+                for preset_name in beam_mm::Preset::list(&presets_dir)? {
+                    let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+                    preset.enable();
+                    preset.save_to_path(&presets_dir)?;
+                    println!("Preset '{}' enabled.", preset_name);
+                }
+            }
+        } else {
+            let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+            preset.enable();
+            preset.save_to_path(&presets_dir)?;
+            println!("Preset '{}' enabled.", preset_name);
+        }
     }
     if let Some(preset_name) = args.disable_preset {
-        let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
-        preset.disable(&mut beamng_mod_cfg)?;
-        preset.save_to_path(&presets_dir)?;
-        println!("Preset '{}' disabled.", preset_name);
+        if preset_name == "all" {
+            let confirmation = beam_mm::confirm_cli(
+                "Are you sure you would like to disable all presets?",
+                false,
+                args.confirm_all,
+            )?;
+            if confirmation {
+                for preset_name in beam_mm::Preset::list(&presets_dir)? {
+                    let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+                    preset.disable(&mut beamng_mod_cfg)?;
+                    preset.save_to_path(&presets_dir)?;
+                    println!("Preset '{}' disabled.", preset_name);
+                }
+            }
+        } else {
+            let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+            preset.disable(&mut beamng_mod_cfg)?;
+            preset.save_to_path(&presets_dir)?;
+            println!("Preset '{}' disabled.", preset_name);
+        }
+        // let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+        // preset.disable(&mut beamng_mod_cfg)?;
+        // preset.save_to_path(&presets_dir)?;
+        // println!("Preset '{}' disabled.", preset_name);
     }
 
     // Handle operations that require args.mods to exist.
