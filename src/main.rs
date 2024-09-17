@@ -81,8 +81,14 @@ fn main() -> beam_mm::Result<()> {
     let mut beamng_mod_cfg = beam_mm::game::ModCfg::load_from_path(&mods_dir)?;
 
     if args.list_presets {
-        for preset in beam_mm::Preset::list(&presets_dir)? {
-            println!("{}", preset);
+        for preset_name in beam_mm::Preset::list(&presets_dir)? {
+            let preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
+            let status = if preset.is_enabled() {
+                "enabled ".green()
+            } else {
+                "disabled".red()
+            };
+            println!("{} {}", status, preset_name);
         }
     }
     if let Some(preset) = args.create_preset {
