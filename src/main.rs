@@ -206,7 +206,26 @@ fn run() -> beam_mm::Result<()> {
         }
     }
 
-    beamng_mod_cfg.apply_presets(&presets_dir)?;
+    match beamng_mod_cfg.apply_presets(&presets_dir) {
+        Ok(_) => (),
+        Err(beam_mm::Error::PresetsFailed { mods, presets }) => {
+            eprintln!("{}", "Failed to apply presets:".red());
+            for preset in presets.iter() {
+                eprintln!("  - {}", preset);
+            }
+            eprintln!("Because of the following missing mods:");
+            for mod_name in mods {
+                eprintln!("  - {}", mod_name);
+            }
+            eprintln!("{}", "Disabling these presets.".red());
+            for preset in presets.iter() {
+                let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+                preset.force_disable(&mut beamng_mod_cfg);
+                preset.save_to_path(&presets_dir)?;
+            }
+        }
+        Err(e) => return Err(e),
+    }
     beamng_mod_cfg.save_to_path(&mods_dir)?;
 
     Ok(())

@@ -299,6 +299,20 @@ impl Preset {
         Ok(())
     }
 
+    /// Force disable the preset.
+    ///
+    /// This method is similar to `Preset::disable` but it doesn't check if the mods in the preset
+    /// exist in the ModCfg. It will simply disable all mods in the preset and set the preset as
+    /// disabled. This is helpful if the mod is enabled but the mods in the preset don't exist in
+    /// the ModCfg.
+    pub fn force_disable(&mut self, mod_config: &mut ModCfg) {
+        self.enabled = false;
+        for mod_name in &self.mods {
+            // We don't care if the mod is already disabled or doesn't exist.
+            let _ = mod_config.set_mod_active(mod_name, false);
+        }
+    }
+
     /// Get the enabled status of the preset.
     pub fn is_enabled(&self) -> bool {
         self.enabled
