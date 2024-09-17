@@ -271,6 +271,9 @@ fn run() -> beam_mm::Result<()> {
             preset.remove_mods(&mods);
             preset.save_to_path(&presets_dir)?;
             println!("Mods removed from preset '{}':", preset_name);
+            for mod_name in mods.iter() {
+                println!("  - {}", mod_name);
+            }
         }
     }
 
