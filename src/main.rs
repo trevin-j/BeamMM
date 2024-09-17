@@ -1,5 +1,6 @@
 use beam_mm::path::*;
 use clap::Parser;
+use colored::Colorize;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -52,6 +53,10 @@ struct Args {
     /// Choose a custom BeamNG data directory
     #[arg(long, value_name = "DIR")]
     custom_data_dir: Option<PathBuf>,
+
+    /// List installed mods
+    #[arg(long)]
+    list_mods: bool,
 }
 
 fn main() -> beam_mm::Result<()> {
@@ -147,6 +152,20 @@ fn main() -> beam_mm::Result<()> {
             let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
             preset.remove_mods(&mods);
             preset.save_to_path(&presets_dir)?;
+        }
+    }
+
+    if args.list_mods {
+        for beamng_mod in beamng_mod_cfg.get_mods() {
+            let status = beamng_mod_cfg.is_mod_active(&beamng_mod).unwrap(); // Safe to unwrap because we just
+                                                                             // got the mods from the config.
+            let status_str = if status {
+                "enabled ".green()
+            } else {
+                "disabled".red()
+            };
+
+            println!("{} {}", status_str, beamng_mod);
         }
     }
 
