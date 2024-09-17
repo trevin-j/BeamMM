@@ -69,7 +69,7 @@ pub enum Error {
     /// # Fields
     ///
     /// * `preset`: The name of the preset that already exists.
-    #[error("Preset {preset} already exists.")]
+    #[error("Preset `{preset}` already exists.")]
     PresetExists { preset: String },
 
     /// std::io errors.
