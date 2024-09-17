@@ -243,15 +243,17 @@ fn run() -> beam_mm::Result<()> {
                 }
             }
         }
-        if let Some(preset) = args.preset_add {
-            let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+        if let Some(preset_name) = args.preset_add {
+            let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
             preset.add_mods(&mods);
             preset.save_to_path(&presets_dir)?;
+            println!("Mods added to preset '{}':", preset_name);
         }
-        if let Some(preset) = args.preset_remove {
-            let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+        if let Some(preset_name) = args.preset_remove {
+            let mut preset = beam_mm::Preset::load_from_path(&preset_name, &presets_dir)?;
             preset.remove_mods(&mods);
             preset.save_to_path(&presets_dir)?;
+            println!("Mods removed from preset '{}':", preset_name);
         }
     }
 
