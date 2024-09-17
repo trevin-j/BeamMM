@@ -179,7 +179,7 @@ pub fn confirm<R: BufRead, W: Write>(
     } else {
         let y_n = String::from(if default { "(Y/n)" } else { "(y/N)" });
 
-        write!(&mut writer, "{} {}\n", msg.trim(), y_n)?;
+        writeln!(&mut writer, "{} {}", msg.trim(), y_n)?;
 
         let mut input = String::new();
         reader.read_line(&mut input)?;

@@ -194,8 +194,8 @@ fn run() -> beam_mm::Result<()> {
 
     if args.list_mods {
         for beamng_mod in beamng_mod_cfg.get_mods() {
-            let status = beamng_mod_cfg.is_mod_active(&beamng_mod).unwrap(); // Safe to unwrap because we just
-                                                                             // got the mods from the config.
+            let status = beamng_mod_cfg.is_mod_active(beamng_mod).unwrap(); // Safe to unwrap because we just
+                                                                            // got the mods from the config.
             let status_str = if status {
                 "enabled ".green()
             } else {
@@ -219,7 +219,7 @@ fn run() -> beam_mm::Result<()> {
             }
             eprintln!("{}", "Disabling these presets.".red());
             for preset in presets.iter() {
-                let mut preset = beam_mm::Preset::load_from_path(&preset, &presets_dir)?;
+                let mut preset = beam_mm::Preset::load_from_path(preset, &presets_dir)?;
                 preset.force_disable(&mut beamng_mod_cfg);
                 preset.save_to_path(&presets_dir)?;
             }
