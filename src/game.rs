@@ -108,7 +108,7 @@ impl ModCfg {
 
         for preset_name in Preset::list(presets_dir)? {
             let preset = Preset::load_from_path(&preset_name, presets_dir)?;
-            if preset.get_enabled() {
+            if preset.is_enabled() {
                 match self.set_mods_active(preset.get_mods(), true) {
                     Ok(()) => (),
                     Err(e) => match e {

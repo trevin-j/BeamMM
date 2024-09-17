@@ -300,7 +300,7 @@ impl Preset {
     }
 
     /// Get the enabled status of the preset.
-    pub fn get_enabled(&self) -> bool {
+    pub fn is_enabled(&self) -> bool {
         self.enabled
     }
 
@@ -397,7 +397,7 @@ mod tests {
         // we care about here is if it successfully enabled the preset.
 
         let loaded_preset = Preset::load_from_path("preset2", &mock.presets_dir).unwrap();
-        assert!(loaded_preset.get_enabled());
+        assert!(loaded_preset.is_enabled());
     }
 
     #[test]
@@ -412,7 +412,7 @@ mod tests {
         // we care about here is if it successfully disabled the preset and disabled all its mods
         // in the ModCfg.
 
-        assert!(!preset.get_enabled());
+        assert!(!preset.is_enabled());
         assert!(!mod_cfg.is_mod_active("mod1").unwrap());
     }
 }
