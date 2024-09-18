@@ -49,6 +49,12 @@ To build from source, install rust for your platform. Clone this repo and run `c
 
 Building for release does *not* require nightly rust, despite the `rust-toolchain.toml` file.
 
+### [crates.io](https://crates.io)
+
+BeamMM is now on crates.io! You can install it with `cargo install beammm --locked`.
+
+You can add as a dependency with `cargo add beammm`.
+
 ## Usage
 
 BeamMM is a CLI program. Run `beammm.exe -h` for help.

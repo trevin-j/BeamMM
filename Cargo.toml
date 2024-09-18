@@ -2,6 +2,13 @@
 name = "beammm"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "A BeamNG.drive mod manager CLI and library."
+authors = ["Trevin Jones <tr3vdev@gmail.com>"]
+readme = "README.md"
+repository = "https://github.com/trevin-j/BeamMM"
+keywords = ["beamng", "modding", "mod-manager"]
+categories = ["command-line-utilities", "config"]
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
@@ -15,3 +22,4 @@ colored = "2.1.0"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)']}
+unsafe_code = "forbid"
