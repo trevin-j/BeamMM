@@ -72,10 +72,12 @@ When BeamNG is launched, it reads the file and loads mods accordingly. During my
 There are some difficulties with installing mods. Installing local files will be simple, as BeamMM can just copy the files to the mods directory. However, installing from the official repo is more difficult. There is no easy-to-spot API for retrieving mod data. Attempts to capture in-game repo traffic failed using multiple different techniques. Attempting to dissect web traffic on the repo web site did not succeed in finding an api either, as the site appears to be server-side rendered. This leaves the only obvious solution left being scraping the site. I fully plan to continue my non-intrusive approach so I cause as little of a headache to the devs as possible, so I am determined to find a way to implement downloading and installing mods using BeamMM and not relying on manual downloads or the in-game repo, without abusing their servers. Some possiblities I am considering:
 
 * Directly scraping the site on each user's BeamMM when they go to find and install mods.
-* Integrating a browser engine or something in the front end so they essentially install directly from the site.
+* Integrating a browser engine or something (which is likely way more complicated than it is worth) in the front end so they essentially install directly from the site.
 * Caching mod pages and data in a GitHub repo or somewhere else that users can access. (I'd need to look into possible copyright issues??)
 
 If you have insights, please discuss with me! These features will remain unimplemented until I commit to a method of implementation.
 
 A possible issue with scraping is low reliability, especially if there is a change in the web page structure. Another is if the devs do not want their site scraped. However, looking at `https://beamng.com/robots.txt`, it only disallows the `/library` endpoint for all User-agents and nothing else is forbidden.
+
+If you are a dev or have concerns about this software interfering with servers or causing any other issues, please reach out to me. I'm trying to avoid causing any problems at all.
 
