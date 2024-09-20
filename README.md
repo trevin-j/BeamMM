@@ -1,6 +1,6 @@
 # BeamMM - BeamNG Mod Manager
 
-BeamMM is a WIP mod manager for BeamNG.Drive written in Rust. This repo itself is the backend library crate and CLI implementation. A GUI implementation is planned for the future, but not yet started.
+BeamMM is a WIP mod manager for BeamNG.Drive written in Rust. This repo itself is the backend library crate and CLI implementation. A GUI implementation can be found [here](https://github.com/trevin-j/BeamMM.gui)!
 
 ## Features
 
