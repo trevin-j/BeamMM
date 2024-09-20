@@ -18,7 +18,7 @@ BeamMM is a WIP mod manager for BeamNG.Drive written in Rust. This repo itself i
   - [ ] Rename presets
   - [x] Add/remove mods from presets
   - [x] Multiple active presets
-- [ ] GUI implementation (BeamMM.gui)
+- [x] GUI implementation - See [BeamMM.gui](https://github.com/trevin-j/BeamMM.gui)!
 - [x] Enabling/disabling mods in bulk or individually
 - [ ] Mod metadata (author, description, etc.)
 - [x] Custom game data directory
